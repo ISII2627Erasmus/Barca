@@ -1,0 +1,10 @@
+class ApplicationUser {
+    + ApplicationUser()
+    + ApplicationUser(id:string, name:string, surname:string, userName:string)
+    + Name : string? <<get>> <<set>>
+    + Surname : string? <<get>> <<set>>
+    + Age : int? <<get>> <<set>>
+    + GenderId : int? <<get>> <<set>>
+}
+IdentityUser <|-- ApplicationUser
+ApplicationUser --> "Gender" Gender

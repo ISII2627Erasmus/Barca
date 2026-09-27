@@ -1,0 +1,6 @@
+@startuml
+hide methods
+
+!include ApplicationUser.puml
+
+@enduml
