@@ -1,15 +1,16 @@
 <Solution>
   <Folder Name="/src/appforseii.api/">
-    <Project Path="src/appforseii.api/AppForSEII.API.csproj" />
+    // Changed to uppercase because I use linux and here filesystem is case-sensitive
+    <Project Path="src/AppForSEII.API/AppForSEII.API.csproj" />
   </Folder>
   <Folder Name="/src/appforseii.web/">
-    <Project Path="src/appforseii.web/AppForSEII.Web.csproj" />
+    <Project Path="src/AppForSEII.Web/AppForSEII.Web.csproj" />
   </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/appforseii.uit/">
-    <Project Path="test/appforseii.uit/AppForSEII.UIT.csproj" />
+    <Project Path="test/AppForSEII.UIT/AppForSEII.UIT.csproj" />
   </Folder>
   <Folder Name="/test/appforseii.ut/">
-    <Project Path="test/appforseii.ut/AppForSEII.UT.csproj" />
+    <Project Path="test/AppForSEII.UT/AppForSEII.UT.csproj" />
   </Folder>
 </Solution>
