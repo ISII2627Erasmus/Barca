@@ -22,6 +22,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Gender> Genders { get; set; }
     public DbSet<Referee> Referees { get; set; }
     
+    public DbSet<Item> Items { get; set; }
+    public DbSet<Purchase> Purchases { get; set; }
+    public DbSet<PurchaseItem> PurchaseItems { get; set; }
+
 
 
 
