@@ -1,6 +1,7 @@
 @startuml
-class Gender {
+class Sport {
     + Id : int <<get>> <<set>>
     + Name : string <<get>> <<set>>
+    + MinimumNumberOfPlayers : int <<get>> <<set>>
 }
 @enduml
