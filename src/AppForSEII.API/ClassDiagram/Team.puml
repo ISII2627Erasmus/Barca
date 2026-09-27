@@ -1,3 +1,4 @@
+@startuml
 class Team {
     + Id : int <<get>> <<set>>
     + Name : string <<get>> <<set>>
@@ -9,4 +10,4 @@ class Team {
     + SportId : int <<get>> <<set>>
 }
 Team o-> "Captain" ApplicationUser
-Team o-> "Sport" Sport
+@enduml
