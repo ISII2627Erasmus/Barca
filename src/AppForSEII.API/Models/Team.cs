@@ -11,7 +11,7 @@ public class Team
     public int Id { get; set; }
 
     [Required]
-    [StringLength(9, MinimumLength = 4)]
+    [StringLength(9, ErrorMessage = "Team name must be between 4 and 9 characters.", MinimumLength = 4)]
     public string Name { get; set; } = string.Empty;
 
     [Range(1, int.MaxValue)]
@@ -34,6 +34,4 @@ public class Team
     [Required]
     public int SportId { get; set; }
 
-    [ForeignKey(nameof(SportId))]
-    public Sport Sport { get; set; } = null!;
 }
