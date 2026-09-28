@@ -1,7 +1,9 @@
 @startuml
-!include .\\ApplicationUser.puml
-!include .\\Gender.puml
-!include .\\Referee.puml
-!include .\\Sport.puml
-!include .\\Team.puml
+class ApplicationUser {
+    + ApplicationUser()
+    + ApplicationUser(id:string, name:string, surname:string, userName:string)
+    + Name : string? <<get>> <<set>>
+    + Surname : string? <<get>> <<set>>
+}
+IdentityUser <|-- ApplicationUser
 @enduml
