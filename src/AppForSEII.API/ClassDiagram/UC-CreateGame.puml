@@ -1,0 +1,8 @@
+@startuml UC_CreateGame
+
+hide methods
+
+!include Game.puml
+!include Sport.puml
+
+@enduml
