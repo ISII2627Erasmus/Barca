@@ -17,6 +17,14 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
 
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+    public DbSet<Sport> Sports { get; set; }
+    public DbSet<Team> Teams { get; set; }  
+    public DbSet<Gender> Genders { get; set; }
+    public DbSet<Referee> Referees { get; set; }
+    
+    public DbSet<Item> Items { get; set; }
+    public DbSet<Purchase> Purchases { get; set; }
+    public DbSet<PurchaseItem> PurchaseItems { get; set; }
 
 
 

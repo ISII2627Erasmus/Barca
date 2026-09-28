@@ -1,0 +1,12 @@
+class Team {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + MaximumNumberOfPlayers : int <<get>> <<set>>
+    + MinimumAge : int <<get>> <<set>>
+    + MaximumAge : int <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + CaptainId : string <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+}
+Team o-> "Captain" ApplicationUser
+Team o-> "Sport" Sport
