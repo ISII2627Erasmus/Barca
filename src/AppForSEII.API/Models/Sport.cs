@@ -15,4 +15,11 @@ public class Sport
 
     [Range(1, int.MaxValue)]
     public int MinimumNumberOfPlayers { get; set; }
+    [Range(1, int.MaxValue)]
+    public int NumberOfReferees { get; set; }
+    
+    [Required]
+    public string Description { get; set; } = string.Empty;
+    [Required]
+    public string BasicRules { get; set; } = string.Empty;
 }
