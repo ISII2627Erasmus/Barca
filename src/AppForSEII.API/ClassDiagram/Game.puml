@@ -1,0 +1,11 @@
+@startuml
+
+class Game {
+    + Id : int
+    + Name : string
+    + Date : DateTime
+    + Place : string
+    + Description : string
+}
+
+@enduml
