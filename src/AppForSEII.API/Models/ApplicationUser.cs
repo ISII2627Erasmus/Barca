@@ -32,4 +32,6 @@ public class ApplicationUser : IdentityUser
 
     [ForeignKey(nameof(GenderId))]
     public Gender? Gender { get; set; }
+
+    public IList<Game> Games { get; set; } = new List<Game>();
 }
