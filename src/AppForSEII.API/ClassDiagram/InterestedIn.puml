@@ -1,0 +1,10 @@
+@startuml
+hide methods
+class InterestedIn {
+    + UserId : string <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+    + Skill : int <<get>> <<set>>
+    + InterestedIn()
+    + InterestedIn(userId:string, sportId:int, skill:int)
+}
+@enduml
