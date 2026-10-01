@@ -6,6 +6,12 @@ class Game {
     + Date : DateTime
     + Place : string
     + Description : string
+    + SportId : int
+    + ResponsibleId : string
 }
+
+Game --> Sport : Sport
+Game --> ApplicationUser : Responsible
+Game "1" -- "0..*" GameInvitation : invitations
 
 @enduml
