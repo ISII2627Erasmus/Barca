@@ -1,15 +1,9 @@
 @startuml
-!include ./ApplicationUser.puml
-!include ./Game.puml
-!include ./GameInvitation.puml
-!include ./Gender.puml
-!include ./InterestedIn.puml
-!include ./Item.puml
-!include ./Purchase.puml
-!include ./PurchaseItem.puml
-!include ./PurchaseStatus.puml
-!include ./RefereeGroup.puml
-!include ./Sport.puml
-!include ./Team.puml
-!include ./TeamInvitation.puml
+class ApplicationUser {
+    + ApplicationUser()
+    + ApplicationUser(id:string, name:string, surname:string, userName:string)
+    + Name : string? <<get>> <<set>>
+    + Surname : string? <<get>> <<set>>
+}
+IdentityUser <|-- ApplicationUser
 @enduml

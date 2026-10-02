@@ -1,18 +1,10 @@
 @startuml
+hide methods
 class ApplicationUser {
-    + ApplicationUser()
-    + ApplicationUser(id:string, name:string, surname:string, userName:string)
-    + ApplicationUser(id:string, name:string, surname:string, userName:string, birthDate:DateOnly, gender:Gender)
     + Name : string? <<get>> <<set>>
     + Surname : string? <<get>> <<set>>
-    + Age : int <<get>>
+    + BirthDate : DateOnly <<get>> <<set>>
+    + Age : int <<get>> <<set>>
+    + Gender : Gender <<get>> <<set>>
 }
-class "ICollection`1"<T> {
-}
-IdentityUser <|-- ApplicationUser
-ApplicationUser --> "BirthDate" DateOnly
-ApplicationUser --> "Gender" Gender
-ApplicationUser o-> "CaptainOf<Team>" "ICollection`1"
-ApplicationUser o-> "TeamInvitations<TeamInvitation>" "ICollection`1"
-ApplicationUser o-> "Interested<InterestedIn>" "ICollection`1"
 @enduml

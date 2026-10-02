@@ -2,8 +2,9 @@ namespace AppForSEII.API.Models;
 
 public enum PurchaseStatus
 {
-	Created,
-	Processing,
-	OnDelivery,
-	Delivered
+    Pending,
+    Processing,
+    Shipped,
+    Delivered,
+    Cancelled
 }

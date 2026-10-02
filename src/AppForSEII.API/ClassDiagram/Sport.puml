@@ -1,4 +1,4 @@
-@startuml
+@startuml Sport
 class Sport {
     + Id : int <<get>> <<set>>
     + Name : string <<get>> <<set>>
@@ -7,7 +7,4 @@ class Sport {
     + Description : string <<get>> <<set>>
     + BasicRules : string <<get>> <<set>>
 }
-class "IList`1"<T> {
-}
-Sport o-> "Games<Game>" "IList`1"
 @enduml
