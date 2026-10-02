@@ -1,6 +1,6 @@
 @startuml
 hide methods
 
-!include Referee.puml
+!include RefereeGroup.puml
 
 @enduml
