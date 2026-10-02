@@ -10,10 +10,15 @@ public class ApplicationDbContext(
     : IdentityDbContext<ApplicationUser>(options)
 {
     protected override void OnModelCreating(ModelBuilder builder)
-    {
-        base.OnModelCreating(builder);
-    }
+{
+    base.OnModelCreating(builder);
 
+    builder.Entity<Game>()
+        .HasOne(game => game.Sport)
+        .WithMany(sport => sport.Games)
+        .HasForeignKey(game => game.SportId)
+        .OnDelete(DeleteBehavior.NoAction);
+}
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<Sport> Sports { get; set; }
     public DbSet<Game> Games { get; set; }
