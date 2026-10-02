@@ -68,9 +68,9 @@ public class SeedData
         {
             (
                 Id: "1",
-                Name: "Elena",
-                Surname: "Navarro Martínez",
-                Email: "elena@uclm.es",
+                Name: "Petra",
+                Surname: "Petra Peric",
+                Email: "petra@alu.uclm.es",
                 BirthDate: new DateOnly(1990, 5, 15),
                 Age: 36,
                 Gender: Gender.Female,
@@ -81,7 +81,7 @@ public class SeedData
                 Id: "3",
                 Name: "Peter",
                 Surname: "Jackson",
-                Email: "peter@uclm.es",
+                Email: "peter@alu.uclm.es",
                 BirthDate: new DateOnly(2001, 3, 10),
                 Age: 25,
                 Gender: Gender.Male,
@@ -92,7 +92,7 @@ public class SeedData
                 Id: "seed-ana",
                 Name: "Ana",
                 Surname: "Horvat",
-                Email: "ana@example.com",
+                Email: "ana@alu.uclm.es",
                 BirthDate: new DateOnly(2002, 6, 20),
                 Age: 24,
                 Gender: Gender.Female,
@@ -103,7 +103,7 @@ public class SeedData
                 Id: "seed-luka",
                 Name: "Luka",
                 Surname: "Novak",
-                Email: "luka@example.com",
+                Email: "luka@alu.uclm.es",
                 BirthDate: new DateOnly(2000, 9, 5),
                 Age: 26,
                 Gender: Gender.Male,
@@ -114,7 +114,7 @@ public class SeedData
                 Id: "seed-mia",
                 Name: "Mia",
                 Surname: "Kovač",
-                Email: "mia@example.com",
+                Email: "mia@alu.uclm.es",
                 BirthDate: new DateOnly(2003, 11, 12),
                 Age: 22,
                 Gender: Gender.Female,
@@ -125,7 +125,7 @@ public class SeedData
                 Id: "seed-ivan",
                 Name: "Ivan",
                 Surname: "Marić",
-                Email: "ivan@example.com",
+                Email: "ivan@alu.uclm.es",
                 BirthDate: new DateOnly(1999, 1, 25),
                 Age: 27,
                 Gender: Gender.Male,
@@ -222,7 +222,7 @@ public class SeedData
         {
             (Email: "petra@alu.uclm.es", SportName: "Futsal", Skill: 4),
             (Email: "petra@alu.uclm.es", SportName: "Basketball", Skill: 3),
-
+            
             (Email: "peter@alu.uclm.es", SportName: "Futsal", Skill: 5),
             (Email: "peter@alu.uclm.es", SportName: "Basketball", Skill: 4),
 
