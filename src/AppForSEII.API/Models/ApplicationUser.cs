@@ -4,13 +4,17 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppForSEII.API.Models;
 
-// Add profile data for application users by adding properties to the ApplicationUser class
 public class ApplicationUser : IdentityUser
 {
     public ApplicationUser()
     {
     }
-    public ApplicationUser(string id, string name, string surname, string userName)
+
+    public ApplicationUser(
+        string id,
+        string name,
+        string surname,
+        string userName)
     {
         Id = id;
         Name = name;
@@ -19,19 +23,60 @@ public class ApplicationUser : IdentityUser
         Email = userName;
     }
 
+    public ApplicationUser(
+        string id,
+        string name,
+        string surname,
+        string userName,
+        DateOnly birthDate,
+        Gender gender)
+        : this(id, name, surname, userName)
+    {
+        BirthDate = birthDate;
+        Gender = gender;
+    }
+
     [StringLength(50)]
     public string? Name { get; set; }
 
     [StringLength(50)]
     public string? Surname { get; set; }
 
-    [Range(3, 120)]
-    public int? Age { get; set; }
+    [Required]
+    public DateOnly BirthDate { get; set; }
 
-    public int? GenderId { get; set; }
+    [NotMapped]
+    public int Age
+    {
+        get
+        {
+            if (BirthDate == default)
+            {
+                return 0;
+            }
 
-    [ForeignKey(nameof(GenderId))]
-    public Gender? Gender { get; set; }
+            DateOnly today = DateOnly.FromDateTime(DateTime.Today);
 
-    public IList<Game> Games { get; set; } = new List<Game>();
+            int age = today.Year - BirthDate.Year;
+
+            if (BirthDate > today.AddYears(-age))
+            {
+                age--;
+            }
+
+            return age;
+        }
+    }
+
+    [EnumDataType(typeof(Gender))]
+    public Gender Gender { get; set; }
+
+    public ICollection<Team> CaptainOf { get; set; }
+        = new List<Team>();
+
+    public ICollection<TeamInvitation> TeamInvitations { get; set; }
+        = new List<TeamInvitation>();
+
+    public ICollection<InterestedIn> Interested { get; set; }
+        = new List<InterestedIn>();
 }
