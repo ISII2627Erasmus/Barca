@@ -1,0 +1,12 @@
+@startuml
+hide methods
+
+class RefereeAssignedTo {
+    + RefereeGroupId : int <<get>> <<set>>
+    + RefereeId : string <<get>> <<set>>
+    + AcceptedAssignment : bool <<get>> <<set>>
+    + Role : string <<get>> <<set>>
+    + RoleDescription : string <<get>> <<set>>
+}
+
+@enduml

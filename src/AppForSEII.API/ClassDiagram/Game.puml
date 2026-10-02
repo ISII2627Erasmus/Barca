@@ -1,13 +1,13 @@
 @startuml
 
 class Game {
-    + Id : int
-    + Name : string
-    + Date : DateTime
-    + Place : string
-    + Description : string
-    + SportId : int
-    + ResponsibleId : string
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Date : DateTime <<get>> <<set>>
+    + Place : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+    + ResponsibleId : string <<get>> <<set>>
 }
 
 Game --> Sport : Sport

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppForSEII.API.Models;
 
@@ -24,18 +24,17 @@ public class Game
 
     [Required]
     public int SportId { get; set; }
-    
+
     public Sport Sport { get; set; } = null!;
 
-    public IList<GameInvitation> GameInvitations { get; set; } = new List<GameInvitation>();
+    public IList<GameInvitation> GameInvitations { get; set; }
+        = new List<GameInvitation>();
 
+    public RefereeGroup? RefereeGroup { get; set; }
 
     [Required]
     public string ResponsibleId { get; set; } = string.Empty;
-    
+
     [ForeignKey(nameof(ResponsibleId))]
     public ApplicationUser Responsible { get; set; } = null!;
-
-
 }
-
