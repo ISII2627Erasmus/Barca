@@ -1,0 +1,22 @@
+@startuml
+hide methods
+
+!include RefereeGroup.puml
+!include Game.puml
+!include RefereeAssignedTo.puml
+!include Referee.puml
+!include Sport.puml
+!include ApplicationUser.puml
+
+class IdentityUser
+IdentityUser <|-- ApplicationUser
+ApplicationUser <|-- Referee
+
+ApplicationUser "1" -- "0..*" Game : Responsible
+Sport "1" -- "0..*" Game : Games
+Game "1" -- "0..1" RefereeGroup : RefereeGroup
+RefereeGroup "1" -- "0..*" RefereeAssignedTo : RefereeAssignments
+Referee "1" -- "0..*" RefereeAssignedTo : RefereeAssignments
+Sport "1" -- "0..*" Referee : Sport
+
+@enduml

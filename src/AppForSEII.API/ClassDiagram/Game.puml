@@ -1,0 +1,17 @@
+@startuml
+
+class Game {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Date : DateTime <<get>> <<set>>
+    + Place : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+    + ResponsibleId : string <<get>> <<set>>
+}
+
+Game --> Sport : Sport
+Game --> ApplicationUser : Responsible
+Game "1" -- "0..*" GameInvitation : invitations
+
+@enduml
