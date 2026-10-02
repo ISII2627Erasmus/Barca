@@ -7,6 +7,30 @@ namespace AppForSEII.API.Models;
 [Index(nameof(Name), IsUnique = true)]
 public class Item
 {
+	public Item() { }
+
+	public Item(
+		string name,
+		string brand,
+		decimal price,
+		int? recommendedAge,
+		Gender? gender,
+		string? size,
+		int quantityAvailableForPurchase,
+		Sport sport)
+	{
+		ArgumentNullException.ThrowIfNull(sport);
+
+		Name = name;
+		Brand = brand;
+		Price = price;
+		RecommendedAge = recommendedAge;
+		Gender = gender;
+		Size = size;
+		QuantityAvailableForPurchase = quantityAvailableForPurchase;
+		Sport = sport;
+		SportId = sport.Id;
+	}
 	[Key]
 	public int Id { get; set; }
 	
@@ -27,10 +51,6 @@ public class Item
 	
 	public int? RecommendedAge { get; set; }
 	
-	// Gender is optional: an item may have no gender restriction.
-	public int? GenderId { get; set; }
-	
-	[ForeignKey(nameof(GenderId))]
 	public Gender? Gender { get; set; }
 	
 	public string? Size { get; set; }
