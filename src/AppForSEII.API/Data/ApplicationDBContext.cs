@@ -19,7 +19,6 @@ public class ApplicationDbContext(
     public DbSet<Game> Games { get; set; }
     public DbSet<Team> Teams { get; set; }
     public DbSet<GameInvitation> GameInvitations { get; set; }
-    public DbSet<Gender> Genders { get; set; }
     public DbSet<RefereeGroup> RefereeGroups { get; set; }
     public DbSet<Referee> Referees { get; set; }
     public DbSet<RefereeAssignedTo> RefereeAssignments { get; set; }

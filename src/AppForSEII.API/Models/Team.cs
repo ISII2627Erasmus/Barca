@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
-using PlantUmlClassDiagramGenerator.Attributes;
 
 namespace AppForSEII.API.Models;
 
 [Index(nameof(Name), IsUnique = true)]
-public class Team
+public class Team : IValidatableObject
 {
     public Team()
     {
@@ -48,10 +47,20 @@ public class Team
     [Range(3, int.MaxValue)]
     public int MaxAge { get; set; } = 3;
 
-    [PlantUmlIgnore]
     public ApplicationUser Captain { get; set; } = null!;
 
-    [PlantUmlIgnore]
     public Sport Sport { get; set; } = null!;
 
+    public ICollection<TeamInvitation> TeamInvitations { get; set; }
+        = new List<TeamInvitation>();
+
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (MaxAge < MinAge)
+        {
+            yield return new ValidationResult(
+                "Maximum age must be greater than or equal to minimum age.",
+                new[] { nameof(MinAge), nameof(MaxAge) });
+        }
+    }
 }
