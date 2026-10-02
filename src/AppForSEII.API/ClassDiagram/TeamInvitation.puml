@@ -1,12 +1,12 @@
 @startuml
-hide methods
 class TeamInvitation {
     + TeamInvitation()
-    + TeamInvitation(userId:string, teamId:int, message:string)
-    + UserId : string <<get>> <<set>>
+    + TeamInvitation(userId:string, teamId:int, invitationMessage:string)
+    + UserId : string <<get>> <<set>> = "0"
     + TeamId : int <<get>> <<set>>
-    + InvitationAccepted : bool <<get>> <<set>> = false
     + InvitationMessage : string <<get>> <<set>> = "Invitation Message for a team member"
-
+    + InvitationAccepted : bool <<get>> <<set>> = false
 }
+TeamInvitation o-> "User" ApplicationUser
+TeamInvitation o-> "Team" Team
 @enduml

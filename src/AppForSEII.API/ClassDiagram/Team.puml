@@ -1,6 +1,7 @@
 @startuml
-hide methods
 class Team {
+    + Team()
+    + Team(name:string, maxMembers:int, minAge:int, maxAge:int, captain:ApplicationUser, sport:Sport, description:string?)
     + Id : int <<get>> <<set>>
     + Name : string <<get>> <<set>> = "Team name"
     + Description : string? <<get>> <<set>> = "Team name"
@@ -8,5 +9,4 @@ class Team {
     + MinAge : int <<get>> <<set>> = 3
     + MaxAge : int <<get>> <<set>> = 3
 }
-
 @enduml

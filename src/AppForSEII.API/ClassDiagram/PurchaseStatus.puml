@@ -1,8 +1,9 @@
 @startuml
 enum PurchaseStatus {
-    Created,
+    Pending,
     Processing,
-    OnDelivery,
+    Shipped,
     Delivered,
+    Cancelled,
 }
 @enduml

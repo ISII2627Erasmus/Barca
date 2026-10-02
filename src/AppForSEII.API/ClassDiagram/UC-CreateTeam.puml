@@ -1,4 +1,5 @@
 @startuml
+
 hide methods
 
 !include Gender.puml
@@ -7,20 +8,5 @@ hide methods
 !include TeamInvitation.puml
 !include Sport.puml
 !include InterestedIn.puml
-
-class IdentityUser
-IdentityUser <|-- ApplicationUser
-
-ApplicationUser "0..*" -- "1" Team : Captain >
-Team "0..*" -- "1" ApplicationUser : CaptainOf >
-
-ApplicationUser "0..*" -- "0..*" TeamInvitation : TeamInvitations >
-Team "1" -- "0..*" TeamInvitation : Team >
-TeamInvitation "0..*" -- "1" ApplicationUser : User >
-
-Team "0..*" -- "1" Sport : Sport >
-
-ApplicationUser "0..*" -- "0..*" InterestedIn : Interested >
-Sport "0..*" -- "0..*" InterestedIn : UserInterested >
 
 @enduml

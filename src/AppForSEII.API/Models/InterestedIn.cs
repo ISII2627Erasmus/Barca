@@ -19,7 +19,7 @@ public class InterestedIn
     }
 
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public string UserId { get; set; } = "0";
 
     [Required]
     public int SportId { get; set; }

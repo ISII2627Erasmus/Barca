@@ -1,6 +1,5 @@
-using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Identity;
 
 namespace AppForSEII.API.Models;
 
@@ -10,11 +9,7 @@ public class ApplicationUser : IdentityUser
     {
     }
 
-    public ApplicationUser(
-        string id,
-        string name,
-        string surname,
-        string userName)
+    public ApplicationUser(string id, string name, string surname, string userName)
     {
         Id = id;
         Name = name;
@@ -29,10 +24,12 @@ public class ApplicationUser : IdentityUser
         string surname,
         string userName,
         DateOnly birthDate,
+        int age,
         Gender gender)
         : this(id, name, surname, userName)
     {
         BirthDate = birthDate;
+        Age = age;
         Gender = gender;
     }
 
@@ -45,34 +42,12 @@ public class ApplicationUser : IdentityUser
     [Required]
     public DateOnly BirthDate { get; set; }
 
-    [NotMapped]
-    public int Age
-    {
-        get
-        {
-            if (BirthDate == default)
-            {
-                return 0;
-            }
-
-            DateOnly today = DateOnly.FromDateTime(DateTime.Today);
-
-            int age = today.Year - BirthDate.Year;
-
-            if (BirthDate > today.AddYears(-age))
-            {
-                age--;
-            }
-
-            return age;
-        }
-    }
+    public int Age { get; set; }
 
     [EnumDataType(typeof(Gender))]
     public Gender Gender { get; set; }
 
-    public ICollection<Team> CaptainOf { get; set; }
-        = new List<Team>();
+    public ICollection<Team> CaptainOf { get; set; } = new List<Team>();
 
     public ICollection<TeamInvitation> TeamInvitations { get; set; }
         = new List<TeamInvitation>();

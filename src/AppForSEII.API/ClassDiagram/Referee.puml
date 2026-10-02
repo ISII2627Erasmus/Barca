@@ -3,4 +3,5 @@ class Referee {
     + Rating : int <<get>> <<set>>
     + YearsRefereeing : int <<get>> <<set>>
 }
+ApplicationUser <|-- Referee
 @enduml

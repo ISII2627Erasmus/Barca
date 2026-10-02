@@ -12,10 +12,18 @@ class Purchase {
     + IsWrapped : bool <<get>> <<set>> = false
     + TotalPrice : decimal <<get>> <<set>>
 }
+class PurchaseItem {
+    + Id : int <<get>> <<set>>
+    + PurchaseId : int <<get>> <<set>>
+    + ItemId : int <<get>> <<set>>
+    + Quantity : int <<get>> <<set>>
+}
 class "ICollection`1"<T> {
 }
 Purchase o-> "Customer" ApplicationUser
 Purchase o-> "PurchaseDate" DateTime
 Purchase o-> "Status" PurchaseStatus
 Purchase o-> "PurchaseItems<PurchaseItem>" "ICollection`1"
+PurchaseItem o-> "Purchase" Purchase
+PurchaseItem o-> "Item" Item
 @enduml

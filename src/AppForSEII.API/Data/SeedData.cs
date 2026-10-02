@@ -1,282 +1,293 @@
-namespace AppForSEII.API.Data
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using AppForSEII.API.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+
+namespace AppForSEII.API.Data;
+
+public class SeedData
 {
-    public class SeedData
+    public static void Initialize(
+        ApplicationDbContext dbContext,
+        IServiceProvider serviceProvider,
+        ILogger logger)
     {
-        public static void Initialize(
-            ApplicationDbContext dbContext,
-            IServiceProvider serviceProvider,
-            ILogger logger)
+        var roleManager =
+            serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+        var userManager =
+            serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        var roles = new List<string>
         {
-            List<string> rolesNames = new List<string>
-            {
-                "Administrator",
-                "Employee",
-                "Customer"
-            };
+            "Administrator",
+            "Employee",
+            "Customer"
+        };
 
-            var roleManager =
-                serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        SeedRoles(roleManager, roles);
+        SeedUsers(userManager, roles);
+        SeedSports(dbContext);
+        SeedInterests(dbContext, userManager);
 
-            try
-            {
-                SeedRoles(roleManager, rolesNames);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding the roles in the Database.");
-            }
+        logger.LogInformation("Seed data initialized successfully.");
+    }
 
-            Gender male;
-            try
-            {
-                male = SeedGender(dbContext, "Male");
-                SeedGender(dbContext, "Female");
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding Genders in the Database.");
-                return;
-            }
-
-            var userManager =
-                serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-            try
-            {
-                SeedUsers(userManager, rolesNames, male);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding the Users in the Database.");
-            }
-
-            try
-            {
-                SeedSports(dbContext);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding Sports in the Database.");
-                return;
-            }
-
-            try
-            {
-                SeedItems(dbContext);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding Items for Purchase Sport Items in the Database.");
-            }
-
-            try
-            {
-                SeedRefereesAndGame(dbContext, userManager, male);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "An error occurred seeding referees and games in the Database.");
-            }
-        }
-
-        public static void SeedRoles(
-            RoleManager<IdentityRole> roleManager,
-            List<string> roles)
+    private static void SeedRoles(
+        RoleManager<IdentityRole> roleManager,
+        List<string> roles)
+    {
+        foreach (string roleName in roles)
         {
-            foreach (string roleName in roles)
+            bool roleExists = roleManager
+                .RoleExistsAsync(roleName)
+                .GetAwaiter()
+                .GetResult();
+
+            if (!roleExists)
             {
-                if (!roleManager.RoleExistsAsync(roleName).Result)
-                {
-                    IdentityRole role = new IdentityRole
-                    {
-                        Name = roleName,
-                        NormalizedName = roleName
-                    };
-
-                    roleManager.CreateAsync(role).GetAwaiter().GetResult();
-                }
-            }
-        }
-
-        public static void SeedUsers(
-            UserManager<ApplicationUser> userManager,
-            List<string> roles,
-            Gender gender)
-        {
-            if (userManager.FindByNameAsync("elena@uclm.es").Result == null)
-            {
-                ApplicationUser user = new ApplicationUser(
-                    "1",
-                    "Elena",
-                    "Navarro Martínez",
-                    "elena@uclm.es",
-                    new DateOnly(1990, 1, 1),
-                    gender)
-                {
-                    EmailConfirmed = true
-                };
-
-                var result = userManager
-                    .CreateAsync(user, "Password1234%")
+                var result = roleManager
+                    .CreateAsync(new IdentityRole(roleName))
                     .GetAwaiter()
                     .GetResult();
 
-                if (result.Succeeded)
-                {
-                    userManager
-                        .AddToRoleAsync(user, roles[0])
-                        .GetAwaiter()
-                        .GetResult();
-                }
+                EnsureSucceeded(result, $"Create role {roleName}");
             }
+        }
+    }
 
-            if (userManager.FindByNameAsync("peter@uclm.es").Result == null)
+    private static void SeedUsers(
+        UserManager<ApplicationUser> userManager,
+        List<string> roles)
+    {
+        var users = new[]
+        {
+            (
+                Id: "1",
+                Name: "Petra",
+                Surname: "Petra Peric",
+                Email: "petra@alu.uclm.es",
+                BirthDate: new DateOnly(1990, 5, 15),
+                Age: 36,
+                Gender: Gender.Female,
+                Role: roles[0],
+                Password: "Password1234%"
+            ),
+            (
+                Id: "3",
+                Name: "Peter",
+                Surname: "Jackson",
+                Email: "peter@alu.uclm.es",
+                BirthDate: new DateOnly(2001, 3, 10),
+                Age: 25,
+                Gender: Gender.Male,
+                Role: roles[2],
+                Password: "OtherPass12$"
+            ),
+            (
+                Id: "seed-ana",
+                Name: "Ana",
+                Surname: "Horvat",
+                Email: "ana@alu.uclm.es",
+                BirthDate: new DateOnly(2002, 6, 20),
+                Age: 24,
+                Gender: Gender.Female,
+                Role: roles[2],
+                Password: "OtherPass12$"
+            ),
+            (
+                Id: "seed-luka",
+                Name: "Luka",
+                Surname: "Novak",
+                Email: "luka@alu.uclm.es",
+                BirthDate: new DateOnly(2000, 9, 5),
+                Age: 26,
+                Gender: Gender.Male,
+                Role: roles[2],
+                Password: "OtherPass12$"
+            ),
+            (
+                Id: "seed-mia",
+                Name: "Mia",
+                Surname: "Kovač",
+                Email: "mia@alu.uclm.es",
+                BirthDate: new DateOnly(2003, 11, 12),
+                Age: 22,
+                Gender: Gender.Female,
+                Role: roles[2],
+                Password: "OtherPass12$"
+            ),
+            (
+                Id: "seed-ivan",
+                Name: "Ivan",
+                Surname: "Marić",
+                Email: "ivan@alu.uclm.es",
+                BirthDate: new DateOnly(1999, 1, 25),
+                Age: 27,
+                Gender: Gender.Male,
+                Role: roles[2],
+                Password: "OtherPass12$"
+            )
+        };
+
+        foreach (var data in users)
+        {
+            ApplicationUser? user = userManager
+                .FindByNameAsync(data.Email)
+                .GetAwaiter()
+                .GetResult();
+
+            if (user == null)
             {
-                ApplicationUser user = new ApplicationUser(
-                    "3",
-                    "Peter",
-                    "Jackson",
-                    "peter@uclm.es",
-                    new DateOnly(1988, 1, 1),
-                    gender)
+                user = new ApplicationUser(
+                    data.Id,
+                    data.Name,
+                    data.Surname,
+                    data.Email)
                 {
+                    BirthDate = data.BirthDate,
+                    Age = data.Age,
+                    Gender = data.Gender,
                     EmailConfirmed = true
                 };
 
-                var result = userManager
-                    .CreateAsync(user, "OtherPass12$")
+                IdentityResult createResult = userManager
+                    .CreateAsync(user, data.Password)
                     .GetAwaiter()
                     .GetResult();
 
-                if (result.Succeeded)
-                {
-                    userManager
-                        .AddToRoleAsync(user, roles[2])
-                        .GetAwaiter()
-                        .GetResult();
-                }
+                EnsureSucceeded(createResult, $"Create user {data.Email}");
+            }
+            else
+            {
+                user.Name = data.Name;
+                user.Surname = data.Surname;
+                user.BirthDate = data.BirthDate;
+                user.Age = data.Age;
+                user.Gender = data.Gender;
+
+                IdentityResult updateResult = userManager
+                    .UpdateAsync(user)
+                    .GetAwaiter()
+                    .GetResult();
+
+                EnsureSucceeded(updateResult, $"Update user {data.Email}");
+            }
+
+            bool alreadyHasRole = userManager
+                .IsInRoleAsync(user, data.Role)
+                .GetAwaiter()
+                .GetResult();
+
+            if (!alreadyHasRole)
+            {
+                IdentityResult roleResult = userManager
+                    .AddToRoleAsync(user, data.Role)
+                    .GetAwaiter()
+                    .GetResult();
+
+                EnsureSucceeded(roleResult, $"Assign role to {data.Email}");
+            }
+        }
+    }
+
+    public static void SeedSports(ApplicationDbContext dbContext)
+    {
+        var sportsToSeed = new[]
+        {
+            new Sport { Name = "Football", MinimumNumberOfPlayers = 11 },
+            new Sport { Name = "Basketball", MinimumNumberOfPlayers = 5 }
+        };
+
+        foreach (var sport in sportsToSeed)
+        {
+            if (!dbContext.Sports.Any(s => s.Name == sport.Name))
+            {
+                dbContext.Sports.Add(sport);
             }
         }
 
-        public static void SeedSports(ApplicationDbContext dbContext)
+        dbContext.SaveChanges();
+    }
+
+    private static void SeedInterests(
+        ApplicationDbContext dbContext,
+        UserManager<ApplicationUser> userManager)
+    {
+        var interests = new[]
         {
-            if (!dbContext.Sports.Any(s => s.Name == "Football"))
-            {
-                dbContext.Sports.Add(new Sport
-                {
-                    Name = "Football",
-                    MinimumNumberOfPlayers = 11,
-                    NumberOfReferees = 1,
-                    Description = "Football sport",
-                    BasicRules = "Two teams compete to score goals."
-                });
-            }
+            (Email: "petra@alu.uclm.es", SportName: "Futsal", Skill: 4),
+            (Email: "petra@alu.uclm.es", SportName: "Basketball", Skill: 3),
+            
+            (Email: "peter@alu.uclm.es", SportName: "Futsal", Skill: 5),
+            (Email: "peter@alu.uclm.es", SportName: "Basketball", Skill: 4),
 
-            if (!dbContext.Sports.Any(s => s.Name == "Basketball"))
-            {
-                dbContext.Sports.Add(new Sport
-                {
-                    Name = "Basketball",
-                    MinimumNumberOfPlayers = 5,
-                    NumberOfReferees = 2,
-                    Description = "Basketball sport",
-                    BasicRules = "Two teams compete to score points."
-                });
-            }
+            (Email: "ana@alu.uclm.es", SportName: "Futsal", Skill: 3),
+            (Email: "ana@alu.uclm.es", SportName: "Basketball", Skill: 5),
 
-            dbContext.SaveChanges();
-        }
+            (Email: "luka@alu.uclm.es", SportName: "Futsal", Skill: 4),
+            (Email: "luka@alu.uclm.es", SportName: "Basketball", Skill: 2),
 
-        public static void SeedItems(ApplicationDbContext dbContext)
+            (Email: "mia@alu.uclm.es", SportName: "Futsal", Skill: 2),
+            (Email: "mia@alu.uclm.es", SportName: "Basketball", Skill: 4),
+
+            (Email: "ivan@alu.uclm.es", SportName: "Futsal", Skill: 5),
+            (Email: "ivan@alu.uclm.es", SportName: "Basketball", Skill: 3)
+        };
+
+        foreach (var data in interests)
         {
-            var football = dbContext.Sports.SingleOrDefault(s => s.Name == "Football")
-                ?? throw new InvalidOperationException("SeedSports must run before SeedItems.");
-
-            var male = dbContext.Genders.SingleOrDefault(g => g.Name == "Male")
-                ?? throw new InvalidOperationException("Male gender must be seeded before SeedItems.");
-
-            if (!dbContext.Items.Any(i => i.Name == "Match Football"))
-            {
-                dbContext.Items.Add(
-                    new Item(
-                        "Match Football",
-                        "Adidas",
-                        29.99m,
-                        12,
-                        male,
-                        "Size 5",
-                        20,
-                        football));
-            }
-
-            dbContext.SaveChanges();
-        }
-
-        public static Gender SeedGender(ApplicationDbContext dbContext, string name)
-        {
-            var gender = dbContext.Genders.SingleOrDefault(g => g.Name == name);
-
-            if (gender == null)
-            {
-                gender = new Gender { Name = name };
-                dbContext.Genders.Add(gender);
-                dbContext.SaveChanges();
-            }
-
-            return gender;
-        }
-
-        public static void SeedRefereesAndGame(
-            ApplicationDbContext dbContext,
-            UserManager<ApplicationUser> userManager,
-            Gender gender)
-        {
-            var football = dbContext.Sports.Single(s => s.Name == "Football");
-
-            SeedRefereeIfMissing(
-                userManager,
-                "referee1@uclm.es",
-                "4",
-                "Alex",
-                "Rivera",
-                football.Id,
-                4,
-                5,
-                gender);
-
-            SeedRefereeIfMissing(
-                userManager,
-                "referee2@uclm.es",
-                "5",
-                "Sam",
-                "Lopez",
-                football.Id,
-                3,
-                2,
-                gender);
-
-            var responsible = userManager
-                .FindByNameAsync("elena@uclm.es")
+            ApplicationUser user = userManager
+                .FindByNameAsync(data.Email)
                 .GetAwaiter()
                 .GetResult()
                 ?? throw new InvalidOperationException(
-                    "SeedUsers must run before seeding the game.");
+                    $"Seed user {data.Email} was not found.");
 
-            if (!dbContext.Games.Any(g => g.Name == "Football Friendly"))
+            Sport sport = dbContext.Sports.Single(
+                item => item.Name == data.SportName);
+
+            InterestedIn? interest = dbContext.InterestedIns
+                .SingleOrDefault(item =>
+                    item.UserId == user.Id &&
+                    item.SportId == sport.Id);
+
+            if (interest == null)
             {
-                dbContext.Games.Add(new Game
-                {
-                    Name = "Football Friendly",
-                    Date = DateTime.Today.AddDays(7),
-                    Place = "Main Stadium",
-                    Description = "Seed game for adding a referee group.",
-                    SportId = football.Id,
-                    ResponsibleId = responsible.Id
-                });
-
-                dbContext.SaveChanges();
+                dbContext.InterestedIns.Add(new InterestedIn(
+                    user.Id,
+                    sport.Id,
+                    data.Skill));
             }
+            else
+            {
+                interest.Skill = data.Skill;
+            }
+
+            dbContext.SaveChanges();
         }
+
+        dbContext.SaveChanges();
+    }
+
+    private static void EnsureSucceeded(
+        IdentityResult result,
+        string operation)
+    {
+        if (!result.Succeeded)
+        {
+            string errors = string.Join(
+                "; ",
+                result.Errors.Select(error => error.Description));
+
+            throw new InvalidOperationException(
+                $"{operation} failed: {errors}");
+        }
+    }
 
         private static void SeedRefereeIfMissing(
             UserManager<ApplicationUser> userManager,
@@ -321,4 +332,3 @@ namespace AppForSEII.API.Data
             }
         }
     }
-}

@@ -1,4 +1,4 @@
-@startuml Sport
+@startuml
 class Sport {
     + Id : int <<get>> <<set>>
     + Name : string <<get>> <<set>>

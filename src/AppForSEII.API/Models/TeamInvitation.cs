@@ -14,16 +14,16 @@ public class TeamInvitation
     public TeamInvitation(
         string userId,
         int teamId,
-        string message)
+        string invitationMessage)
     {
         UserId = userId;
         TeamId = teamId;
-        InvitationMessage = message;
+        InvitationMessage = invitationMessage;
         InvitationAccepted = false;
     }
 
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public string UserId { get; set; } = "0";
 
     [Required]
     public int TeamId { get; set; }
