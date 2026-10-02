@@ -1,0 +1,6 @@
+@startuml
+class Referee {
+    + Rating : int <<get>> <<set>>
+    + YearsRefereeing : int <<get>> <<set>>
+}
+@enduml
