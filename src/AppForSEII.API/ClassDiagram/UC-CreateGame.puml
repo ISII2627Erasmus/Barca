@@ -4,5 +4,17 @@ hide methods
 
 !include Game.puml
 !include Sport.puml
+!include GameInvitation.puml
+!include Team.puml
+!include ApplicationUser.puml
+
+class IdentityUser
+IdentityUser <|-- ApplicationUser
+
+ApplicationUser "0..*" -- "1" Game : Responsible >
+Sport "1" -- "0..*" Game : Games >
+
+Game "1" -- "0..*" GameInvitation : GameInvitations >
+Team "1" -- "0..*" GameInvitation : GameInvitations >
 
 @enduml
