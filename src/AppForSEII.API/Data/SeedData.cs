@@ -267,6 +267,8 @@ public class SeedData
             {
                 interest.Skill = data.Skill;
             }
+
+            dbContext.SaveChanges();
         }
 
         dbContext.SaveChanges();
@@ -284,6 +286,49 @@ public class SeedData
 
             throw new InvalidOperationException(
                 $"{operation} failed: {errors}");
+        }
+
+        private static void SeedRefereeIfMissing(
+            UserManager<ApplicationUser> userManager,
+            string email,
+            string id,
+            string name,
+            string surname,
+            int sportId,
+            int rating,
+            int yearsRefereeing,
+            Gender gender)
+        {
+            if (userManager.FindByNameAsync(email).GetAwaiter().GetResult() != null)
+            {
+                return;
+            }
+
+            var referee = new Referee(
+                id,
+                name,
+                surname,
+                email,
+                sportId,
+                rating,
+                yearsRefereeing)
+            {
+                BirthDate = new DateOnly(1985, 1, 1),
+                Gender = gender,
+                EmailConfirmed = true
+            };
+
+            var result = userManager
+                .CreateAsync(referee, "RefereePass123!")
+                .GetAwaiter()
+                .GetResult();
+
+            if (!result.Succeeded)
+            {
+                throw new InvalidOperationException(
+                    $"Could not seed referee {email}: " +
+                    string.Join("; ", result.Errors.Select(e => e.Description)));
+            }
         }
     }
 }
