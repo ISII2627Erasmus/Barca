@@ -25,6 +25,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Item> Items { get; set; }
     public DbSet<Purchase> Purchases { get; set; }
     public DbSet<PurchaseItem> PurchaseItems { get; set; }
+    public DbSet<InterestedIn> InterestedIns { get; set; }
+
     public DbSet<TeamInvitation> TeamInvitations { get; set; }
 
 
