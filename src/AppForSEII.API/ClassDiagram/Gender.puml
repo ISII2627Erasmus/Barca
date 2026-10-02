@@ -1,7 +1,6 @@
 @startuml
-enum Gender {
-    Female
-    Male
-    Other
+class Gender {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
 }
 @enduml

@@ -1,0 +1,10 @@
+@startuml
+hide methods
+
+!include Item.puml
+!include Purchase.puml
+!include PurchaseItem.puml
+!include PurchaseStatus.puml
+!include Gender.puml
+
+@enduml

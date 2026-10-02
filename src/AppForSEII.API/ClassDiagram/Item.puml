@@ -1,0 +1,18 @@
+@startuml
+class Item {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + Brand : string <<get>> <<set>>
+    + Price : decimal <<get>> <<set>>
+    + RecommendedAge : int? <<get>> <<set>>
+    + GenderId : int? <<get>> <<set>>
+    + Size : string? <<get>> <<set>>
+    + QuantityAvailableForPurchase : int <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+Item --> "Gender" Gender
+Item o-> "Sport" Sport
+Item o-> "PurchaseItems<PurchaseItem>" "ICollection`1"
+@enduml

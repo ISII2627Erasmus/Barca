@@ -1,0 +1,21 @@
+@startuml
+class Purchase {
+    + Id : int <<get>> <<set>>
+    + CustomerId : string <<get>> <<set>>
+    + Street : string <<get>> <<set>>
+    + City : string <<get>> <<set>>
+    + Province : string <<get>> <<set>>
+    + CreditCardNumber : string <<get>> <<set>>
+    + CCV : string <<get>> <<set>>
+    + ExpirationDate : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + IsWrapped : bool <<get>> <<set>> = false
+    + TotalPrice : decimal <<get>> <<set>>
+}
+class "ICollection`1"<T> {
+}
+Purchase o-> "Customer" ApplicationUser
+Purchase o-> "PurchaseDate" DateTime
+Purchase o-> "Status" PurchaseStatus
+Purchase o-> "PurchaseItems<PurchaseItem>" "ICollection`1"
+@enduml
