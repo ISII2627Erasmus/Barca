@@ -22,4 +22,8 @@ public class Sport
     public string Description { get; set; } = string.Empty;
     [Required]
     public string BasicRules { get; set; } = string.Empty;
+
+    public IList<Game> Games { get; set; } = new List<Game>();
+    
+   
 }

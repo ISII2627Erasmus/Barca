@@ -34,4 +34,6 @@ public class Team
     [Required]
     public int SportId { get; set; }
 
+    public IList<GameInvitation> GameInvitations { get; set; } = new List<GameInvitation>();
+
 }

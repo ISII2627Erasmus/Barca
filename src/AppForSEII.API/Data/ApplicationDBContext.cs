@@ -20,6 +20,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Sport> Sports { get; set; }
     public DbSet<Game> Games { get; set; }
     public DbSet<Team> Teams { get; set; }  
+
+    public DbSet<GameInvitation> GameInvitations { get; set; }
     public DbSet<Gender> Genders { get; set; }
     public DbSet<Referee> Referees { get; set; }
     public DbSet<Item> Items { get; set; }
