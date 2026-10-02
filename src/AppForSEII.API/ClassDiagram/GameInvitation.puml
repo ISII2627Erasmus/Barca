@@ -1,10 +1,16 @@
-@startuml
+@startuml GameInvitation
+
 class GameInvitation {
-    + TeamId : int <<get>> <<set>>
-    + GameId : int <<get>> <<set>>
-    + AcceptedGame : bool <<get>> <<set>> = false
-    + Message : string <<get>> <<set>>
+    + TeamId : int
+    + GameId : int
+    + AcceptedGame : bool
+    + Message : string
 }
-GameInvitation o-> "Team" Team
-GameInvitation o-> "Game" Game
+
+class Team
+class Game
+
+GameInvitation --> Team : Team
+GameInvitation --> Game : Game
+
 @enduml

@@ -1,8 +1,0 @@
-@startuml
-enum PurchaseStatus {
-    Created,
-    Processing,
-    OnDelivery,
-    Delivered,
-}
-@enduml

@@ -1,11 +1,10 @@
 @startuml
+hide methods
 class InterestedIn {
-    + InterestedIn()
-    + InterestedIn(userId:string, sportId:int, skill:int)
     + UserId : string <<get>> <<set>>
     + SportId : int <<get>> <<set>>
     + Skill : int <<get>> <<set>>
+    + InterestedIn()
+    + InterestedIn(userId:string, sportId:int, skill:int)
 }
-InterestedIn o-> "UserInterested" ApplicationUser
-InterestedIn o-> "Sport" Sport
 @enduml

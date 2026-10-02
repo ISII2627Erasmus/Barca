@@ -50,7 +50,7 @@ public class Purchase
     public decimal TotalPrice { get; set; }
 
     [Required]
-    public PurchaseStatus Status { get; set; } = PurchaseStatus.Created;
+    public PurchaseStatus Status { get; set; } = PurchaseStatus.Pending;
 
     public ICollection<PurchaseItem> PurchaseItems { get; set; } = new List<PurchaseItem>();
 }
