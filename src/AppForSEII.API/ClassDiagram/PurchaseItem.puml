@@ -1,0 +1,10 @@
+@startuml
+class PurchaseItem {
+    + ItemId : int <<get>> <<set>>
+    + PurchaseId : int <<get>> <<set>>
+    + Price : decimal <<get>> <<set>>
+    + Quantity : int <<get>> <<set>> = 1
+}
+PurchaseItem o-> "Item" Item
+PurchaseItem o-> "Purchase" Purchase
+@enduml
