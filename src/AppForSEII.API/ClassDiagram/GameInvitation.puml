@@ -1,0 +1,16 @@
+@startuml GameInvitation
+
+class GameInvitation {
+    + TeamId : int
+    + GameId : int
+    + AcceptedGame : bool
+    + Message : string
+}
+
+class Team
+class Game
+
+GameInvitation --> Team : Team
+GameInvitation --> Game : Game
+
+@enduml
