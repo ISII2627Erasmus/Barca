@@ -1,4 +1,7 @@
-class Gender {
-    + Id : int <<get>> <<set>>
-    + Name : string <<get>> <<set>>
+@startuml
+enum Gender {
+    Female,
+    Male,
+    Other,
 }
+@enduml

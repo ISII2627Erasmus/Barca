@@ -1,0 +1,13 @@
+@startuml
+class Item {
+    + Id : int <<get>> <<set>>
+    + Name : string <<get>> <<set>>
+    + RecommendedAge : int <<get>> <<set>>
+    + Gender : string <<get>> <<set>>
+    + Price : decimal <<get>> <<set>>
+    + Size : string <<get>> <<set>>
+    + Brand : string <<get>> <<set>>
+    + SportId : int <<get>> <<set>>
+}
+Item o-> "Sport" Sport
+@enduml

@@ -1,6 +1,12 @@
 @startuml
+
 hide methods
 
+!include Gender.puml
+!include ApplicationUser.puml
 !include Team.puml
+!include TeamInvitation.puml
+!include Sport.puml
+!include InterestedIn.puml
 
 @enduml
