@@ -54,25 +54,3 @@ public class Purchase
 
     public ICollection<PurchaseItem> PurchaseItems { get; set; } = new List<PurchaseItem>();
 }
-
-public class PurchaseItem
-{
-    [Key]
-    public int Id { get; set; }
-
-    [Required]
-    public int PurchaseId { get; set; }
-
-    [ForeignKey(nameof(PurchaseId))]
-    public Purchase Purchase { get; set; } = null!;
-
-    [Required]
-    public int ItemId { get; set; }
-
-    [ForeignKey(nameof(ItemId))]
-    public Item Item { get; set; } = null!;
-
-    [Required]
-    [Range(1, int.MaxValue)]
-    public int Quantity { get; set; }
-}
