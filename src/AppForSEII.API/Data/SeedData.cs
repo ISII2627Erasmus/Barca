@@ -7,12 +7,7 @@ namespace AppForSEII.API.Data
             IServiceProvider serviceProvider,
             ILogger logger)
         {
-            List<string> rolesNames = new List<string>
-            {
-                "Administrator",
-                "Employee",
-                "Customer"
-            };
+            List<string> rolesNames = new List<string> {"Administrator","Employee","Customer"};
 
             var roleManager =
                 serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -23,9 +18,7 @@ namespace AppForSEII.API.Data
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex,
-                    "An error occurred seeding the roles in the Database.");
+                logger.LogError(ex,"An error occurred seeding the roles in the Database.");
             }
 
             var userManager =
@@ -37,9 +30,7 @@ namespace AppForSEII.API.Data
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex,
-                    "An error occurred seeding the Users in the Database.");
+                logger.LogError(ex,"An error occurred seeding the Users in the Database.");
             }
 
             try
@@ -48,12 +39,20 @@ namespace AppForSEII.API.Data
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex,
-                    "An error occurred seeding Sports in the Database.");
+                logger.LogError(ex,"An error occurred seeding Sports in the Database.");
             }
+
+            try
+            {
+                SeedItems(dbContext);
+            }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex,"An error occurred seeding Items for Purchase Sport Items in the Database.");
+                }
         }
 
+        
 
         public static void SeedRoles(
             RoleManager<IdentityRole> roleManager,
@@ -61,25 +60,19 @@ namespace AppForSEII.API.Data
         {
             foreach (string roleName in roles)
             {
-                // It checks such role does not exist in the database
                 if (!roleManager.RoleExistsAsync(roleName).Result)
                 {
                     IdentityRole role = new IdentityRole();
                     role.Name = roleName;
                     role.NormalizedName = roleName;
-
-                    IdentityResult roleResult =
-                        roleManager.CreateAsync(role).Result;
+                    IdentityResult roleResult = roleManager.CreateAsync(role).Result;
                 }
             }
         }
-
-
         public static void SeedUsers(
             UserManager<ApplicationUser> userManager,
             List<string> roles)
         {
-            // First, it checks the user does not already exist in the DB
             if (userManager.FindByNameAsync("elena@uclm.es").Result == null)
             {
                 ApplicationUser user = new ApplicationUser(
@@ -98,7 +91,6 @@ namespace AppForSEII.API.Data
 
                 if (result.IsCompletedSuccessfully)
                 {
-                    // Administrator role
                     userManager.AddToRoleAsync(user, roles[0]).Wait();
                 }
             }
@@ -106,8 +98,7 @@ namespace AppForSEII.API.Data
 
             if (userManager.FindByNameAsync("peter@uclm.es").Result == null)
             {
-                // A customer class has been defined because it has
-                // different attributes (purchase, rental, etc.)
+
                 ApplicationUser user = new ApplicationUser(
                     "3",
                     "Peter",
@@ -156,6 +147,24 @@ namespace AppForSEII.API.Data
 
                 dbContext.SaveChanges();
             }
+        }
+        public static void SeedItems(ApplicationDbContext dbContext)
+        {
+            var football = dbContext.Sports.SingleOrDefault(s => s.Name == "Football")
+                ?? throw new InvalidOperationException("SeedSports must run before SeedItems.");
+
+            var male = dbContext.Genders.SingleOrDefault(g => g.Name == "Male")
+                ?? throw new InvalidOperationException("The gender-seeding method must run before SeedItems.");
+
+            var female = dbContext.Genders.SingleOrDefault(g => g.Name == "Female")
+                ?? throw new InvalidOperationException("The gender-seeding method must run before SeedItems.");
+
+            if (!dbContext.Items.Any(i => i.Name == "Match Football"))
+            {
+                dbContext.Items.Add(new Item("Match Football", "Adidas",29.99m, 12,male,"Size 5",20,football));
+            }
+
+            dbContext.SaveChanges();
         }
     }
 }
