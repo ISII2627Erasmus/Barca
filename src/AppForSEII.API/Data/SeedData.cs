@@ -34,6 +34,7 @@ public class SeedData
         SeedUsers(userManager, roles);
         SeedSports(dbContext);
         SeedInterests(dbContext, userManager);
+        SeedGame(dbContext);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -248,6 +249,56 @@ public class SeedData
 
                 existingSport.BasicRules =
                     sport.BasicRules;
+            }
+        }
+
+        dbContext.SaveChanges();
+    }
+
+    private static void SeedGame(ApplicationDbContext dbContext)
+    {
+        var football = dbContext.Sports
+            .SingleOrDefault(s => s.Name == "Football")
+            ?? throw new InvalidOperationException(
+                "Football sport was not found.");
+
+        var basketball = dbContext.Sports
+            .SingleOrDefault(s => s.Name == "Basketball")
+            ?? throw new InvalidOperationException(
+                "Basketball sport was not found.");
+
+        var responsible = dbContext.Users
+            .SingleOrDefault(u => u.Email == "petra@alu.uclm.es")
+            ?? throw new InvalidOperationException(
+                "Responsible user was not found.");
+
+        var gamesToSeed = new[]
+        {
+            new Game
+            {
+                Name = "Football Friendly Match",
+                Date = new DateTime(2026, 11, 15, 16, 0, 0),
+                Place = "Albacete Stadium",
+                Description = "Friendly football match between local teams.",
+                SportId = football.Id,
+                ResponsibleId = responsible.Id
+            },
+            new Game
+            {
+                Name = "Basketball Tournament",
+                Date = new DateTime(2026, 11, 20, 18, 0, 0),
+                Place = "University Sports Center",
+                Description = "Basketball tournament for university teams.",
+                SportId = basketball.Id,
+                ResponsibleId = responsible.Id
+            }
+        };
+
+        foreach (var game in gamesToSeed)
+        {
+            if (!dbContext.Set<Game>().Any(g => g.Name == game.Name))
+            {
+                dbContext.Set<Game>().Add(game);
             }
         }
 
