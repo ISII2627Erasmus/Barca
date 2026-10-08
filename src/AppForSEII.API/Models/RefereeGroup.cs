@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 namespace AppForSEII.API.Models;
 
 [Index(nameof(Name), IsUnique = true)]
-[Index(nameof(GameId), IsUnique = true)]
 public class RefereeGroup
 {
     public RefereeGroup()
