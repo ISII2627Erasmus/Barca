@@ -34,9 +34,9 @@ public class Team : IValidatableObject
     [Required]
     [StringLength(9, MinimumLength = 4,
         ErrorMessage = "Team name must be between 4 and 9 characters.")]
-    public string Name { get; set; } = "Team name";
+    public string Name { get; set; } = string.Empty;
 
-    public string? Description { get; set; } = "Team name";
+    public string? Description { get; set; }
 
     [Range(1, int.MaxValue)]
     public int MaxMembers { get; set; }
