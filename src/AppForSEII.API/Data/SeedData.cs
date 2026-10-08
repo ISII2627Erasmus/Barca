@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,7 @@ public class SeedData
         SeedUsers(userManager, roles);
         SeedSports(dbContext);
         SeedInterests(dbContext, userManager);
+        SeedGame(dbContext);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -199,8 +201,16 @@ public class SeedData
     {
         var sportsToSeed = new[]
         {
-            new Sport { Name = "Football", MinimumNumberOfPlayers = 11 },
-            new Sport { Name = "Basketball", MinimumNumberOfPlayers = 5 }
+            new Sport
+            {
+                Name = "Football",
+                MinimumNumberOfPlayers = 11
+            },
+            new Sport
+            {
+                Name = "Basketball",
+                MinimumNumberOfPlayers = 5
+            }
         };
 
         foreach (var sport in sportsToSeed)
@@ -208,6 +218,56 @@ public class SeedData
             if (!dbContext.Sports.Any(s => s.Name == sport.Name))
             {
                 dbContext.Sports.Add(sport);
+            }
+        }
+
+        dbContext.SaveChanges();
+    }
+
+    private static void SeedGame(ApplicationDbContext dbContext)
+    {
+        var football = dbContext.Sports
+            .SingleOrDefault(s => s.Name == "Football")
+            ?? throw new InvalidOperationException(
+                "Football sport was not found.");
+
+        var basketball = dbContext.Sports
+            .SingleOrDefault(s => s.Name == "Basketball")
+            ?? throw new InvalidOperationException(
+                "Basketball sport was not found.");
+
+        var responsible = dbContext.Users
+            .SingleOrDefault(u => u.Email == "petra@alu.uclm.es")
+            ?? throw new InvalidOperationException(
+                "Responsible user was not found.");
+
+        var gamesToSeed = new[]
+        {
+            new Game
+            {
+                Name = "Football Friendly Match",
+                Date = new DateTime(2026, 11, 15, 16, 0, 0),
+                Place = "Albacete Stadium",
+                Description = "Friendly football match between local teams.",
+                SportId = football.Id,
+                ResponsibleId = responsible.Id
+            },
+            new Game
+            {
+                Name = "Basketball Tournament",
+                Date = new DateTime(2026, 11, 20, 18, 0, 0),
+                Place = "University Sports Center",
+                Description = "Basketball tournament for university teams.",
+                SportId = basketball.Id,
+                ResponsibleId = responsible.Id
+            }
+        };
+
+        foreach (var game in gamesToSeed)
+        {
+            if (!dbContext.Set<Game>().Any(g => g.Name == game.Name))
+            {
+                dbContext.Set<Game>().Add(game);
             }
         }
 
@@ -222,7 +282,7 @@ public class SeedData
         {
             (Email: "petra@alu.uclm.es", SportName: "Futsal", Skill: 4),
             (Email: "petra@alu.uclm.es", SportName: "Basketball", Skill: 3),
-            
+
             (Email: "peter@alu.uclm.es", SportName: "Futsal", Skill: 5),
             (Email: "peter@alu.uclm.es", SportName: "Basketball", Skill: 4),
 
@@ -289,46 +349,48 @@ public class SeedData
         }
     }
 
-        private static void SeedRefereeIfMissing(
-            UserManager<ApplicationUser> userManager,
-            string email,
-            string id,
-            string name,
-            string surname,
-            int sportId,
-            int rating,
-            int yearsRefereeing,
-            Gender gender)
+    private static void SeedRefereeIfMissing(
+        UserManager<ApplicationUser> userManager,
+        string email,
+        string id,
+        string name,
+        string surname,
+        int sportId,
+        int rating,
+        int yearsRefereeing,
+        Gender gender)
+    {
+        if (userManager.FindByNameAsync(email)
+            .GetAwaiter().GetResult() != null)
         {
-            if (userManager.FindByNameAsync(email).GetAwaiter().GetResult() != null)
-            {
-                return;
-            }
+            return;
+        }
 
-            var referee = new Referee(
-                id,
-                name,
-                surname,
-                email,
-                sportId,
-                rating,
-                yearsRefereeing)
-            {
-                BirthDate = new DateOnly(1985, 1, 1),
-                Gender = gender,
-                EmailConfirmed = true
-            };
+        var referee = new Referee(
+            id,
+            name,
+            surname,
+            email,
+            sportId,
+            rating,
+            yearsRefereeing)
+        {
+            BirthDate = new DateOnly(1985, 1, 1),
+            Gender = gender,
+            EmailConfirmed = true
+        };
 
-            var result = userManager
-                .CreateAsync(referee, "RefereePass123!")
-                .GetAwaiter()
-                .GetResult();
+        var result = userManager
+            .CreateAsync(referee, "RefereePass123!")
+            .GetAwaiter()
+            .GetResult();
 
-            if (!result.Succeeded)
-            {
-                throw new InvalidOperationException(
-                    $"Could not seed referee {email}: " +
-                    string.Join("; ", result.Errors.Select(e => e.Description)));
-            }
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(
+                $"Could not seed referee {email}: " +
+                string.Join("; ",
+                    result.Errors.Select(e => e.Description)));
         }
     }
+}
