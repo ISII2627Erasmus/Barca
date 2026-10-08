@@ -201,7 +201,7 @@ public class SeedData
     {
         var sportsToSeed = new[]
         {
-            new SportS
+            new Sport
             {
                 Name = "Football",
                 MinimumNumberOfPlayers = 11,
