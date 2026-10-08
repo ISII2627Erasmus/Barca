@@ -35,6 +35,7 @@ public class SeedData
         SeedSports(dbContext);
         SeedInterests(dbContext, userManager);
         SeedGame(dbContext);
+        SeedReferees(dbContext, userManager);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -379,6 +380,36 @@ public class SeedData
                 $"{operation} failed: {errors}");
         }
     }
+
+    private static void SeedReferees(
+    ApplicationDbContext dbContext,
+    UserManager<ApplicationUser> userManager)
+{
+    Sport football = dbContext.Sports
+        .Single(sport => sport.Name == "Football");
+
+    SeedRefereeIfMissing(
+        userManager,
+        "referee1@alu.uclm.es",
+        "seed-referee-1",
+        "Alex",
+        "Rivera",
+        football.Id,
+        4,
+        5,
+        Gender.Other);
+
+    SeedRefereeIfMissing(
+        userManager,
+        "referee2@alu.uclm.es",
+        "seed-referee-2",
+        "Sam",
+        "Lopez",
+        football.Id,
+        3,
+        2,
+        Gender.Other);
+}
 
     private static void SeedRefereeIfMissing(
         UserManager<ApplicationUser> userManager,
