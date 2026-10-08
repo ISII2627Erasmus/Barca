@@ -201,23 +201,54 @@ public class SeedData
     {
         var sportsToSeed = new[]
         {
-            new Sport
+            new SportS
             {
                 Name = "Football",
-                MinimumNumberOfPlayers = 11
+                MinimumNumberOfPlayers = 11,
+                NumberOfReferees = 1,
+                Description = "Football is a team sport played between two teams.",
+                BasicRules = "Two teams compete to score goals."
             },
             new Sport
             {
                 Name = "Basketball",
-                MinimumNumberOfPlayers = 5
+                MinimumNumberOfPlayers = 5,
+                NumberOfReferees = 2,
+                Description = "Basketball is a team sport played on a court.",
+                BasicRules = "Two teams compete to score points by shooting the ball into the basket."
+            },
+            new Sport
+            {
+                Name = "Futsal",
+                MinimumNumberOfPlayers = 5,
+                NumberOfReferees = 2,
+                Description = "Futsal is an indoor version of football.",
+                BasicRules = "Two teams of five players compete to score goals."
             }
         };
 
         foreach (var sport in sportsToSeed)
         {
-            if (!dbContext.Sports.Any(s => s.Name == sport.Name))
+            var existingSport = dbContext.Sports
+                .SingleOrDefault(s => s.Name == sport.Name);
+
+            if (existingSport == null)
             {
                 dbContext.Sports.Add(sport);
+            }
+            else
+            {
+                existingSport.MinimumNumberOfPlayers =
+                    sport.MinimumNumberOfPlayers;
+
+                existingSport.NumberOfReferees =
+                    sport.NumberOfReferees;
+
+                existingSport.Description =
+                    sport.Description;
+
+                existingSport.BasicRules =
+                    sport.BasicRules;
             }
         }
 
@@ -360,8 +391,7 @@ public class SeedData
         int yearsRefereeing,
         Gender gender)
     {
-        if (userManager.FindByNameAsync(email)
-            .GetAwaiter().GetResult() != null)
+        if (userManager.FindByNameAsync(email).GetAwaiter().GetResult() != null)
         {
             return;
         }
@@ -389,8 +419,7 @@ public class SeedData
         {
             throw new InvalidOperationException(
                 $"Could not seed referee {email}: " +
-                string.Join("; ",
-                    result.Errors.Select(e => e.Description)));
+                string.Join("; ", result.Errors.Select(e => e.Description)));
         }
     }
 }
