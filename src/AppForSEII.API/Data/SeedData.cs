@@ -32,7 +32,9 @@ public class SeedData
         SeedRoles(roleManager, roles);
         SeedUsers(userManager, roles);
         SeedSports(dbContext);
-        SeedInterests(dbContext, userManager);
+        SeedItems(dbContext);
+
+        SeedInterests(dbContext, userManager); 
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -200,7 +202,8 @@ public class SeedData
         var sportsToSeed = new[]
         {
             new Sport { Name = "Football", MinimumNumberOfPlayers = 11 },
-            new Sport { Name = "Basketball", MinimumNumberOfPlayers = 5 }
+            new Sport { Name = "Basketball", MinimumNumberOfPlayers = 5 },
+            new Sport { Name = "Futsal", MinimumNumberOfPlayers = 3 }
         };
 
         foreach (var sport in sportsToSeed)
@@ -208,6 +211,48 @@ public class SeedData
             if (!dbContext.Sports.Any(s => s.Name == sport.Name))
             {
                 dbContext.Sports.Add(sport);
+            }
+        }
+
+        dbContext.SaveChanges();
+    }
+
+        private static void SeedItems(ApplicationDbContext dbContext)
+    {
+        Sport football = dbContext.Sports
+            .Single(sport => sport.Name == "Football");
+
+        Sport basketball = dbContext.Sports
+            .Single(sport => sport.Name == "Basketball");
+
+        var itemsToSeed = new[]
+        {
+            new Item(
+                "Football",
+                "Adidas",
+                39.99m,
+                recommendedAge: null,
+                gender: null,
+                size: "5",
+                quantityAvailableForPurchase: 20,
+                sport: football),
+
+            new Item(
+                "Basketball Shoes",
+                "Nike",
+                79.99m,
+                recommendedAge: 16,
+                gender: Gender.Other,
+                size: "M",
+                quantityAvailableForPurchase: 10,
+                sport: basketball)
+        };
+
+        foreach (Item item in itemsToSeed)
+        {
+            if (!dbContext.Items.Any(existing => existing.Name == item.Name))
+            {
+                dbContext.Items.Add(item);
             }
         }
 

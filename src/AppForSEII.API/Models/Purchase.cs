@@ -73,6 +73,7 @@ public class Purchase
 
     [Required]
     [Range(0, double.MaxValue)]
+    [Precision(18, 2)]
     public decimal TotalPrice { get; set; }
 
     public string? PurchaseDescription { get; set; }
