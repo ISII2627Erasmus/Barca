@@ -36,6 +36,7 @@ public class SeedData
         SeedInterests(dbContext, userManager);
         SeedGame(dbContext);
         SeedReferees(dbContext, userManager);
+        SeedItems(dbContext);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -256,6 +257,48 @@ public class SeedData
         dbContext.SaveChanges();
     }
 
+        private static void SeedItems(ApplicationDbContext dbContext)
+    {
+        Sport football = dbContext.Sports
+            .Single(sport => sport.Name == "Football");
+
+        Sport basketball = dbContext.Sports
+            .Single(sport => sport.Name == "Basketball");
+
+        var itemsToSeed = new[]
+        {
+            new Item(
+                "Football",
+                "Adidas",
+                39.99m,
+                recommendedAge: null,
+                gender: null,
+                size: "5",
+                quantityAvailableForPurchase: 20,
+                sport: football),
+
+            new Item(
+                "Basketball Shoes",
+                "Nike",
+                79.99m,
+                recommendedAge: 16,
+                gender: Gender.Other,
+                size: "M",
+                quantityAvailableForPurchase: 10,
+                sport: basketball)
+        };
+
+        foreach (Item item in itemsToSeed)
+        {
+            // Item.Name is unique, so skip rows that are already in the database.
+            if (!dbContext.Items.Any(existing => existing.Name == item.Name))
+            {
+                dbContext.Items.Add(item);
+            }
+        }
+
+        dbContext.SaveChanges();
+    }
     private static void SeedGame(ApplicationDbContext dbContext)
     {
         var football = dbContext.Sports
