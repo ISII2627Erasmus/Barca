@@ -26,19 +26,6 @@ namespace AppForSEII.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Genders",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Genders", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Sports",
                 columns: table => new
                 {
@@ -84,7 +71,8 @@ namespace AppForSEII.API.Migrations
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Surname = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    GenderId = table.Column<int>(type: "int", nullable: false),
+                    Age = table.Column<int>(type: "int", nullable: false),
+                    Gender = table.Column<int>(type: "int", nullable: false),
                     Discriminator = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
                     SportId = table.Column<int>(type: "int", nullable: true),
                     Rating = table.Column<int>(type: "int", nullable: true),
@@ -108,17 +96,10 @@ namespace AppForSEII.API.Migrations
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AspNetUsers_Genders_GenderId",
-                        column: x => x.GenderId,
-                        principalTable: "Genders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
                         name: "FK_AspNetUsers_Sports_SportId",
                         column: x => x.SportId,
                         principalTable: "Sports",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -131,7 +112,7 @@ namespace AppForSEII.API.Migrations
                     Brand = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     RecommendedAge = table.Column<int>(type: "int", nullable: true),
-                    GenderId = table.Column<int>(type: "int", nullable: true),
+                    Gender = table.Column<int>(type: "int", nullable: true),
                     Size = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     QuantityAvailableForPurchase = table.Column<int>(type: "int", nullable: false),
                     SportId = table.Column<int>(type: "int", nullable: false)
@@ -139,11 +120,6 @@ namespace AppForSEII.API.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Items", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Items_Genders_GenderId",
-                        column: x => x.GenderId,
-                        principalTable: "Genders",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Items_Sports_SportId",
                         column: x => x.SportId,
@@ -257,8 +233,7 @@ namespace AppForSEII.API.Migrations
                         name: "FK_Games_AspNetUsers_ResponsibleId",
                         column: x => x.ResponsibleId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Games_Sports_SportId",
                         column: x => x.SportId,
@@ -306,7 +281,7 @@ namespace AppForSEII.API.Migrations
                     ExpirationDate = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsWrapped = table.Column<bool>(type: "bit", nullable: false),
                     PurchaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PurchaseDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PurchaseStatus = table.Column<int>(type: "int", nullable: false)
                 },
@@ -328,10 +303,10 @@ namespace AppForSEII.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(9)", maxLength: 9, nullable: false),
-                    MaximumNumberOfPlayers = table.Column<int>(type: "int", nullable: false),
-                    MinimumAge = table.Column<int>(type: "int", nullable: false),
-                    MaximumAge = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MaxMembers = table.Column<int>(type: "int", nullable: false),
+                    MinAge = table.Column<int>(type: "int", nullable: false),
+                    MaxAge = table.Column<int>(type: "int", nullable: false),
                     CaptainId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SportId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -342,6 +317,11 @@ namespace AppForSEII.API.Migrations
                         name: "FK_Teams_AspNetUsers_CaptainId",
                         column: x => x.CaptainId,
                         principalTable: "AspNetUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Teams_Sports_SportId",
+                        column: x => x.SportId,
+                        principalTable: "Sports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -506,11 +486,6 @@ namespace AppForSEII.API.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_GenderId",
-                table: "AspNetUsers",
-                column: "GenderId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_AspNetUsers_SportId",
                 table: "AspNetUsers",
                 column: "SportId");
@@ -544,20 +519,9 @@ namespace AppForSEII.API.Migrations
                 column: "SportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Genders_Name",
-                table: "Genders",
-                column: "Name",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_InterestedIns_SportId",
                 table: "InterestedIns",
                 column: "SportId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Items_GenderId",
-                table: "Items",
-                column: "GenderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Items_Name",
@@ -618,6 +582,11 @@ namespace AppForSEII.API.Migrations
                 table: "Teams",
                 column: "Name",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Teams_SportId",
+                table: "Teams",
+                column: "SportId");
         }
 
         /// <inheritdoc />
@@ -673,9 +642,6 @@ namespace AppForSEII.API.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
-                name: "Genders");
 
             migrationBuilder.DropTable(
                 name: "Sports");

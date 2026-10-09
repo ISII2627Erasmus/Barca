@@ -18,7 +18,25 @@ public class ApplicationDbContext(
         .WithMany(sport => sport.Games)
         .HasForeignKey(game => game.SportId)
         .OnDelete(DeleteBehavior.NoAction);
+
+    builder.Entity<Team>()
+        .HasOne(team => team.Captain)
+        .WithMany(user => user.CaptainOf)
+        .OnDelete(DeleteBehavior.NoAction);
+
+    builder.Entity<Game>()
+        .HasOne(game => game.Responsible)
+        .WithMany()
+        .HasForeignKey(game => game.ResponsibleId)
+        .OnDelete(DeleteBehavior.NoAction);
+
+    builder.Entity<Referee>()
+        .HasOne(referee => referee.Sport)
+        .WithMany()
+        .HasForeignKey(referee => referee.SportId)
+        .OnDelete(DeleteBehavior.NoAction);
 }
+
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
     public DbSet<Sport> Sports { get; set; }
     public DbSet<Game> Games { get; set; }
