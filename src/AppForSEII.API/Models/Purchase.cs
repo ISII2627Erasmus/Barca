@@ -72,7 +72,6 @@ public class Purchase
     public DateTime PurchaseDate { get; set; } = DateTime.UtcNow;
 
     [Required]
-    [Precision(18, 2)]
     [Range(0, double.MaxValue)]
     public decimal TotalPrice { get; set; }
 

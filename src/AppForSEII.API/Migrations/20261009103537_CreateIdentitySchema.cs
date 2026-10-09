@@ -281,7 +281,7 @@ namespace AppForSEII.API.Migrations
                     ExpirationDate = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsWrapped = table.Column<bool>(type: "bit", nullable: false),
                     PurchaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     PurchaseDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PurchaseStatus = table.Column<int>(type: "int", nullable: false)
                 },
