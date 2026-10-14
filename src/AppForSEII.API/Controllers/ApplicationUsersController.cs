@@ -10,6 +10,8 @@ using AppForSEII.API.Data;
 
 namespace AppForSEII.API.Controllers
 {
+    [Route("api/[controller]")]
+    [ApiController]
     public class ApplicationUsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
