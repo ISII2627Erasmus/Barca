@@ -82,7 +82,7 @@ public class SeedData
                 Password: "Password1234%"
             ),
             (
-                Id: "3",
+                Id: "2",
                 Name: "Peter",
                 Surname: "Jackson",
                 Email: "peter@alu.uclm.es",
@@ -93,7 +93,7 @@ public class SeedData
                 Password: "OtherPass12$"
             ),
             (
-                Id: "seed-ana",
+                Id: "3",
                 Name: "Ana",
                 Surname: "Horvat",
                 Email: "ana@alu.uclm.es",
@@ -104,7 +104,7 @@ public class SeedData
                 Password: "OtherPass12$"
             ),
             (
-                Id: "seed-luka",
+                Id: "4",
                 Name: "Luka",
                 Surname: "Novak",
                 Email: "luka@alu.uclm.es",
@@ -115,7 +115,7 @@ public class SeedData
                 Password: "OtherPass12$"
             ),
             (
-                Id: "seed-mia",
+                Id: "5",
                 Name: "Mia",
                 Surname: "Kovač",
                 Email: "mia@alu.uclm.es",
@@ -126,7 +126,7 @@ public class SeedData
                 Password: "OtherPass12$"
             ),
             (
-                Id: "seed-ivan",
+                Id: "6",
                 Name: "Ivan",
                 Surname: "Marić",
                 Email: "ivan@alu.uclm.es",
