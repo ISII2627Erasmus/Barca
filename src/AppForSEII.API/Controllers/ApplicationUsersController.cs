@@ -61,6 +61,32 @@ namespace AppForSEII.API.Controllers
             return Ok(applicationUserDTO);
         }
 
+                [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(IList<ApplicationUserForTeamDTO>), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), (int)HttpStatusCode.BadRequest)]
+        public async Task<ActionResult> GetUsersForTeam(string? sportName, int? minAge, int? maxAge)
+        {
+            if (minAge != null && maxAge != null && minAge > maxAge)
+            {
+                ModelState.AddModelError("minAge&maxAge", "minAge must be lower than or equal to maxAge");
+                _logger.LogError($"{DateTime.Now} Error: minAge must be lower than or equal to maxAge");
+                return BadRequest(new ValidationProblemDetails(ModelState));
+            }
+
+            IList<ApplicationUserForTeamDTO> users = await _context.ApplicationUsers
+                .Include(u => u.Interested).ThenInclude(i => i.Sport)
+                .Where(u => (sportName == null || u.Interested.Any(i => i.Sport.Name == sportName))
+                    && (minAge == null || u.Age >= minAge)
+                    && (maxAge == null || u.Age <= maxAge))
+                .OrderBy(u => u.Surname)
+                    .ThenBy(u => u.Name)
+                .Select(u => new ApplicationUserForTeamDTO(u.Id, u.Name, u.Surname, u.Age,
+                    u.Interested.Select(i => new UserSportDTO(i.Sport.Name, i.Skill)).ToList()))
+                .ToListAsync();
+
+            return Ok(users);
+        }
 
         private bool ApplicationUserDTOExists(string name, string surname)
         {
