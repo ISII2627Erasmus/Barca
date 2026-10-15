@@ -1,4 +1,4 @@
-namespace AppForSEII.API.DTOs.TeamDTO;
+namespace AppForSEII.API.DTOs.TeamDTOs;
 
 public class TeamForGameDTO
 {
