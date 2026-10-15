@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AppForSEII.API.DTOs.ApplicationUserDTO;
 using AppForSEII.API.Data;
-using AppForSEII.API.DTOs.TeamDTO;
+using AppForSEII.API.DTOs.TeamDTOs;
 
 namespace AppForSEII.API.Controllers
 {
