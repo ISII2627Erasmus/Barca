@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.GameDTOs;
@@ -10,13 +11,19 @@ namespace AppForSEII.API.Controllers
     public class GamesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<GamesController> _logger;
 
-        public GamesController(ApplicationDbContext context)
+        public GamesController(
+            ApplicationDbContext context,
+            ILogger<GamesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet("{id}")]
+        [ProducesResponseType(typeof(GetGameDTO), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetGame(int id)
         {
             var game = await _context.Games
@@ -34,6 +41,9 @@ namespace AppForSEII.API.Controllers
 
             if (game == null)
             {
+                _logger.LogWarning(
+                    "Game with ID {GameId} was not found.", id);
+
                 return NotFound();
             }
 
@@ -46,19 +56,22 @@ namespace AppForSEII.API.Controllers
                 Description = game.Description,
                 SportName = game.Sport.Name,
 
-                InvitedTeams = game.GameInvitations.Select(invitation => new InvitedTeamDTO
-                {
-                    TeamId = invitation.Team.Id,
-                    TeamName = invitation.Team.Name,
-                    CaptainName = invitation.Team.Captain.Name ?? "",
-                    CaptainSurname = invitation.Team.Captain.Surname ?? "",
-                    NumberOfMembers = 1 + invitation.Team.TeamInvitations.Count(
-                        memberInvitation => memberInvitation.InvitationAccepted),
-                    MinAge = invitation.Team.MinAge,
-                    MaxAge = invitation.Team.MaxAge,
-                    SportName = invitation.Team.Sport.Name,
-                    Message = invitation.Message
-                }).ToList()
+                InvitedTeams = game.GameInvitations
+                    .Select(invitation => new InvitedTeamDTO
+                    {
+                        TeamId = invitation.Team.Id,
+                        TeamName = invitation.Team.Name,
+                        CaptainName = invitation.Team.Captain.Name ?? "",
+                        CaptainSurname = invitation.Team.Captain.Surname ?? "",
+                        NumberOfMembers = 1 + invitation.Team.TeamInvitations
+                            .Count(memberInvitation =>
+                                memberInvitation.InvitationAccepted),
+                        MinAge = invitation.Team.MinAge,
+                        MaxAge = invitation.Team.MaxAge,
+                        SportName = invitation.Team.Sport.Name,
+                        Message = invitation.Message
+                    })
+                    .ToList()
             };
 
             return Ok(gameDTO);
