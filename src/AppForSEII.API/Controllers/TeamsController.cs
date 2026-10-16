@@ -75,7 +75,8 @@ public class TeamsController : ControllerBase
             }
 
             var teams = await query
-            
+            .OrderBy(team => team.Name)
+            .ThenBy(team => team.Captain.Surname)
             .Select(team => new TeamForGameDTO
             
             {
