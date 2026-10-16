@@ -96,6 +96,35 @@ public class TeamsController : ControllerBase
             
             return Ok(teams);
         }
+
+                [HttpGet]
+        [Route("[action]")]
+        [ProducesResponseType(typeof(TeamDetailDTO), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult> GetTeam(int id)
+        {
+            TeamDetailDTO? team = await _context.Teams
+                .Where(t => t.Id == id)
+                .Include(t => t.Captain)
+                .Include(t => t.Sport)
+                .Include(t => t.TeamInvitations)
+                    .ThenInclude(ti => ti.User)
+                .Select(t => new TeamDetailDTO(t.Id, t.Name, t.Sport.Name, t.MinAge, t.MaxAge,
+                    t.Captain.Name, t.Captain.Surname, t.Captain.Age,
+                    t.TeamInvitations
+                        .Select(ti => new TeamInvitationDTO(ti.User.Id, ti.User.Name, ti.User.Surname,
+                            ti.User.Age, ti.InvitationMessage))
+                        .ToList()))
+                .FirstOrDefaultAsync();
+
+            if (team == null)
+            {
+                _logger.LogError($"{DateTime.Now} Error: Team with id {id} does not exist");
+                return NotFound();
+            }
+
+            return Ok(team);
+        }
 }
  
 
