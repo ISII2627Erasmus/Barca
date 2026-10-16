@@ -34,6 +34,7 @@ public class SeedData
         SeedUsers(userManager, roles);
         SeedSports(dbContext);
         SeedInterests(dbContext, userManager);
+        SeedTeams(dbContext, userManager);
         SeedGame(dbContext);
         SeedReferees(dbContext, userManager);
         SeedItems(dbContext);
@@ -257,7 +258,7 @@ public class SeedData
         dbContext.SaveChanges();
     }
 
-        private static void SeedItems(ApplicationDbContext dbContext)
+    private static void SeedItems(ApplicationDbContext dbContext)
     {
         Sport football = dbContext.Sports
             .Single(sport => sport.Name == "Football");
@@ -349,6 +350,70 @@ public class SeedData
         dbContext.SaveChanges();
     }
 
+    private static void SeedTeams(
+    ApplicationDbContext dbContext,
+    UserManager<ApplicationUser> userManager)
+    {
+        var teams = new[]
+        {
+            (Name: "Lions", CaptainEmail: "petra@alu.uclm.es", SportName: "Futsal",
+                MaxMembers: 5, MinAge: 18, MaxAge: 40, Description: "Futsal team for weekend games",
+                Invited: new[]
+                {
+                    (Email: "peter@alu.uclm.es", Message: "Join the Lions, we play every Saturday!", Accepted: true),
+                    (Email: "ivan@alu.uclm.es", Message: "We need a good player like you", Accepted: false)
+                }),
+            (Name: "Eagles", CaptainEmail: "ana@alu.uclm.es", SportName: "Basketball",
+                MaxMembers: 6, MinAge: 20, MaxAge: 30, Description: "Basketball team of the university",
+                Invited: new[]
+                {
+                    (Email: "mia@alu.uclm.es", Message: "Want to play basketball with us?", Accepted: true),
+                    (Email: "luka@alu.uclm.es", Message: "Join the Eagles!", Accepted: false)
+                })
+        };
+
+        foreach (var data in teams)
+        {
+            if (dbContext.Teams.Any(team => team.Name == data.Name))
+            {
+                continue;
+            }
+
+            ApplicationUser captain = userManager
+                .FindByNameAsync(data.CaptainEmail)
+                .GetAwaiter()
+                .GetResult()
+                ?? throw new InvalidOperationException(
+                    $"Seed user {data.CaptainEmail} was not found.");
+
+            Sport sport = dbContext.Sports.Single(
+                item => item.Name == data.SportName);
+
+            var newTeam = new Team(data.Name, data.MaxMembers, data.MinAge, data.MaxAge,
+                captain, sport, data.Description);
+            dbContext.Teams.Add(newTeam);
+            dbContext.SaveChanges();
+
+            foreach (var invitation in data.Invited)
+            {
+                ApplicationUser user = userManager
+                    .FindByNameAsync(invitation.Email)
+                    .GetAwaiter()
+                    .GetResult()
+                    ?? throw new InvalidOperationException(
+                        $"Seed user {invitation.Email} was not found.");
+
+                dbContext.TeamInvitations.Add(
+                    new TeamInvitation(user.Id, newTeam.Id, invitation.Message)
+                    {
+                        InvitationAccepted = invitation.Accepted
+                    });
+            }
+
+            dbContext.SaveChanges();
+        }
+    }
+
     private static void SeedInterests(
         ApplicationDbContext dbContext,
         UserManager<ApplicationUser> userManager)
@@ -427,32 +492,32 @@ public class SeedData
     private static void SeedReferees(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager)
-{
-    Sport football = dbContext.Sports
-        .Single(sport => sport.Name == "Football");
+    {
+        Sport football = dbContext.Sports
+            .Single(sport => sport.Name == "Football");
 
-    SeedRefereeIfMissing(
-        userManager,
-        "referee1@alu.uclm.es",
-        "seed-referee-1",
-        "Alex",
-        "Rivera",
-        football.Id,
-        4,
-        5,
-        Gender.Other);
+        SeedRefereeIfMissing(
+            userManager,
+            "referee1@alu.uclm.es",
+            "seed-referee-1",
+            "Alex",
+            "Rivera",
+            football.Id,
+            4,
+            5,
+            Gender.Other);
 
-    SeedRefereeIfMissing(
-        userManager,
-        "referee2@alu.uclm.es",
-        "seed-referee-2",
-        "Sam",
-        "Lopez",
-        football.Id,
-        3,
-        2,
-        Gender.Other);
-}
+        SeedRefereeIfMissing(
+            userManager,
+            "referee2@alu.uclm.es",
+            "seed-referee-2",
+            "Sam",
+            "Lopez",
+            football.Id,
+            3,
+            2,
+            Gender.Other);
+    }
 
     private static void SeedRefereeIfMissing(
         UserManager<ApplicationUser> userManager,
