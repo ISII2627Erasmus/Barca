@@ -7,7 +7,7 @@ public class ApplicationUserForTeamDTO
     }
 
     public ApplicationUserForTeamDTO(string id, string? name, string? surname, int age,
-        IList<UserSportDTO> sports)
+        IList<InterestedInDTO> sports)
     {
         Id = id;
         Name = name;
@@ -26,7 +26,7 @@ public class ApplicationUserForTeamDTO
 
     public int Age { get; set; }
 
-    public IList<UserSportDTO> Sports { get; set; } = new List<UserSportDTO>();
+    public IList<InterestedInDTO> Sports { get; set; } = new List<InterestedInDTO>();
 
     public override bool Equals(object? obj)
     {

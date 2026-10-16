@@ -1,12 +1,12 @@
 namespace AppForSEII.API.DTOs.ApplicationUserDTO;
 
-public class UserSportDTO
+public class InterestedInDTO
 {
-    public UserSportDTO()
+    public InterestedInDTO()
     {
     }
 
-    public UserSportDTO(string sportName, int skill)
+    public InterestedInDTO(string sportName, int skill)
     {
         SportName = sportName;
         Skill = skill;
@@ -20,7 +20,7 @@ public class UserSportDTO
 
     public override bool Equals(object? obj)
     {
-        return obj is UserSportDTO dTO &&
+        return obj is InterestedInDTO dTO &&
                SportName == dTO.SportName &&
                Skill == dTO.Skill;
     }
