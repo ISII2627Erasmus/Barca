@@ -3,7 +3,7 @@ using AppForSEII.API.Models;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
-public class ItemsForPurchaseDTO
+public record ItemsForPurchaseDTO
 {
 	public ItemsForPurchaseDTO(
 		int id,
@@ -48,4 +48,5 @@ public class ItemsForPurchaseDTO
 	public int QuantityAvailableForPurchase { get; set; }
 	
 	public SportForPurchaseDTO Sport { get; set; }
+
 }

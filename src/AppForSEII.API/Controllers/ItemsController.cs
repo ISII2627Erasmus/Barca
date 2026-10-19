@@ -14,7 +14,7 @@ public sealed class ItemsController(ApplicationDbContext context) : ControllerBa
     [ProducesResponseType(
         typeof(IReadOnlyList<ItemsForPurchaseDTO>),
         StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ItemsForPurchaseDTO>>>
+    public async Task<ActionResult<ItemsForPurchaseDTO>>
         GetItemsForPurchase(
             [FromQuery] Gender? gender,
             CancellationToken cancellationToken)
