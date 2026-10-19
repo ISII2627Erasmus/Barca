@@ -20,7 +20,7 @@ public sealed class GetPurchaseDTO
         PurchaseStatus purchaseStatus,
         string userId,
         PurchaseUserDTO user,
-        IReadOnlyList<PurchaseItemDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems)
     {
         Id = id;
         PurchaseDate = purchaseDate;
@@ -60,7 +60,7 @@ public sealed class GetPurchaseDTO
     public PurchaseStatus PurchaseStatus { get; set; }
     public string UserId { get; set; }
     public PurchaseUserDTO User { get; set; }
-    public IReadOnlyList<PurchaseItemDTO> PurchaseItems { get; set; }
+    public List<PurchaseItemDTO> PurchaseItems { get; set; }
 }
 
 public sealed class PurchaseUserDTO
