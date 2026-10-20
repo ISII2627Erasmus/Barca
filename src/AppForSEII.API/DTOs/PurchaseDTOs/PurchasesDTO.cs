@@ -3,7 +3,7 @@ using AppForSEII.API.Models;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
-public sealed class GetPurchaseDTO
+public class GetPurchaseDTO
 {
     public GetPurchaseDTO(
         int id,
@@ -20,7 +20,7 @@ public sealed class GetPurchaseDTO
         PurchaseStatus purchaseStatus,
         string userId,
         PurchaseUserDTO user,
-        IReadOnlyList<PurchaseItemDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems)
     {
         Id = id;
         PurchaseDate = purchaseDate;
@@ -60,7 +60,7 @@ public sealed class GetPurchaseDTO
     public PurchaseStatus PurchaseStatus { get; set; }
     public string UserId { get; set; }
     public PurchaseUserDTO User { get; set; }
-    public IReadOnlyList<PurchaseItemDTO> PurchaseItems { get; set; }
+    public List<PurchaseItemDTO> PurchaseItems { get; set; }
 }
 
 public sealed class PurchaseUserDTO
@@ -86,14 +86,14 @@ public sealed class PurchaseUserDTO
     public Gender Gender { get; set; }
 }
 
-public sealed class PurchaseItemDTO
+public class PurchaseItemDTO
 {
     public PurchaseItemDTO(
         int purchaseId,
         int itemId,
         int quantity,
         decimal price,
-        ItemForPurchaseDTO item)
+        ItemsForPurchaseDTO item)
     {
         PurchaseId = purchaseId;
         ItemId = itemId;
@@ -106,45 +106,9 @@ public sealed class PurchaseItemDTO
     public int ItemId { get; set; }
     public int Quantity { get; set; }
     public decimal Price { get; set; }
-    public ItemForPurchaseDTO Item { get; set; }
+    public ItemsForPurchaseDTO Item { get; set; }
 }
-
-public sealed class ItemForPurchaseDTO
-{
-    public ItemForPurchaseDTO(
-        int id,
-        string name,
-        decimal price,
-        int? recommendedAge,
-        Gender? gender,
-        string? size,
-        int quantityAvailableForPurchase,
-        SportForPurchaseDTO sport)
-    {
-        Id = id;
-        Name = name;
-        Price = price;
-        RecommendedAge = recommendedAge;
-        Gender = gender;
-        Size = size;
-        QuantityAvailableForPurchase = quantityAvailableForPurchase;
-        Sport = sport;
-    }
-
-    public int Id { get; set; }
-
-    [StringLength(100)]
-    public string Name { get; set; }
-
-    public decimal Price { get; set; }
-    public int? RecommendedAge { get; set; }
-    public Gender? Gender { get; set; }
-    public string? Size { get; set; }
-    public int QuantityAvailableForPurchase { get; set; }
-    public SportForPurchaseDTO Sport { get; set; }
-}
-
-public sealed class SportForPurchaseDTO
+public class SportForPurchaseDTO
 {
     public SportForPurchaseDTO(
         int id,

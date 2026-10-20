@@ -14,7 +14,7 @@ public sealed class ItemsController(ApplicationDbContext context) : ControllerBa
     [ProducesResponseType(
         typeof(IReadOnlyList<ItemsForPurchaseDTO>),
         StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ItemsForPurchaseDTO>>>
+    public async Task<ActionResult<ItemsForPurchaseDTO>>
         GetItemsForPurchase(
             [FromQuery] Gender? gender,
             CancellationToken cancellationToken)
@@ -39,7 +39,8 @@ public sealed class ItemsController(ApplicationDbContext context) : ControllerBa
                 item.Gender,
                 item.Size,
                 item.QuantityAvailableForPurchase,
-                new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name)))
+                new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name, item.Sport.MinimumNumberOfPlayers, item.Sport.NumberOfReferees,
+                item.Sport.Description, item.Sport.BasicRules)))
             .ToListAsync(cancellationToken);
 
         return Ok(items);

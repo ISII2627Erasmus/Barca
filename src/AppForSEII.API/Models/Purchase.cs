@@ -44,15 +44,15 @@ public class Purchase
     public ApplicationUser User { get; set; } = null!;
     
     [Required]
-    [StringLength(100, MinimumLength = 3)]
+    [StringLength(255, MinimumLength = 3)]
     public string Street { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(50, MinimumLength = 3)]
+    [StringLength(255, MinimumLength = 3)]
     public string City { get; set; } = string.Empty;
 
     [Required]
-    [StringLength(50, MinimumLength = 3)]
+    [StringLength(255, MinimumLength = 3)]
     public string Province { get; set; } = string.Empty;
 
     [Required]

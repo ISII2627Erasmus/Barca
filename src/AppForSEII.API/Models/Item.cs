@@ -38,8 +38,7 @@ public class Item
 	[StringLength(100)]
 	public string Name { get; set; } = string.Empty;
 	
-	// Brand is requested by the Purchase Sport Items use case, although it
-	// is not shown in the supplied class diagram.
+	// Brand is requested by the Purchase Sport Items use case, although it is not shown in the supplied class diagram so I will implement it still
 	[Required]
 	[StringLength(50)]
 	public string Brand { get; set; } = string.Empty;
