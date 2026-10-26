@@ -8,26 +8,33 @@ namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public sealed class ItemsController(ApplicationDbContext context) : ControllerBase
+public class ItemsController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet("[action]")]
     [ProducesResponseType(
-        typeof(IReadOnlyList<ItemsForPurchaseDTO>),
+        typeof(List<ItemsForPurchaseDTO>),
         StatusCodes.Status200OK)]
-    public async Task<ActionResult<ItemsForPurchaseDTO>>
+    public async Task<ActionResult<List<ItemsForPurchaseDTO>>>
         GetItemsForPurchase(
             [FromQuery] Gender? gender,
+            [FromQuery] string? sportName,
             CancellationToken cancellationToken)
     {
-        var query = context.Items.AsNoTracking();
+        var query = context.Items
+            .AsNoTracking()
+            .Where(item => item.QuantityAvailableForPurchase > 0);
 
         if (gender.HasValue)
         {
             query = query.Where(item => item.Gender == gender.Value);
         }
 
+        if (!string.IsNullOrWhiteSpace(sportName))
+        {
+            query = query.Where(item => item.Sport.Name == sportName);
+        }
+
         var items = await query
-            .Include(item => item.Sport)
             .OrderBy(item => item.Gender)
             .ThenBy(item => item.Name)
             .Select(item => new ItemsForPurchaseDTO(
@@ -38,9 +45,7 @@ public sealed class ItemsController(ApplicationDbContext context) : ControllerBa
                 item.RecommendedAge,
                 item.Gender,
                 item.Size,
-                item.QuantityAvailableForPurchase,
-                new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name, item.Sport.MinimumNumberOfPlayers, item.Sport.NumberOfReferees,
-                item.Sport.Description, item.Sport.BasicRules)))
+                new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name)))
             .ToListAsync(cancellationToken);
 
         return Ok(items);
