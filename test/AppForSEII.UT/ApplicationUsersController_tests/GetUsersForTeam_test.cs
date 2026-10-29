@@ -30,10 +30,10 @@ namespace AppForSEII.UT.ApplicationUsersController_tests
             var interests = new List<InterestedIn>()
             {
                 new InterestedIn("1", sports[0].Id, 5),
-            new InterestedIn("1", sports[1].Id, 3),
-new InterestedIn("2", sports[1].Id, 4),
-new InterestedIn("3", sports[1].Id, 2),
-new InterestedIn("4", sports[0].Id, 3),
+                new InterestedIn("1", sports[1].Id, 3),
+                new InterestedIn("2", sports[1].Id, 4),
+                new InterestedIn("3", sports[1].Id, 2),
+                new InterestedIn("4", sports[0].Id, 3),
             };
 
             _context.AddRange(interests);
