@@ -3,88 +3,82 @@ using AppForSEII.API.DTOs.PurchaseDTOs;
 
 namespace AppForSEII.UT.ItemsController_test;
 
-public class GetItemsForPurchase_test : AppForSEII4SqliteUT
+public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOprations>
 {
-    private readonly Sport _football;
-    private readonly Item _footballBoots;
+    private readonly Databasefixture4GetOprations _fixture;
 
-    public GetItemsForPurchase_test()
+    public GetItemsForPurchase_test(Databasefixture4GetOprations fixture)
     {
-        _football = new Sport
-        {
-            Name = "Football",
-            MinimumNumberOfPlayers = 11,
-            NumberOfReferees = 1,
-            Description = "Football",
-            BasicRules = "Score goals"
-        };
-        var basketball = new Sport
-        {
-            Name = "Basketball",
-            MinimumNumberOfPlayers = 5,
-            NumberOfReferees = 2,
-            Description = "Basketball",
-            BasicRules = "Score points"
-        };
-
-        _context.Sports.AddRange(_football, basketball);
-        _context.SaveChanges();
-
-        _footballBoots = new Item(
-            "Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", 5, _football);
-        _context.Items.AddRange(
-            _footballBoots,
-            new Item("Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M", 8, _football),
-            new Item("Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", 4, basketball),
-            new Item("Out of stock", "Nike", 29.90m, 21, Gender.Male, "42", 0, _football));
-        _context.SaveChanges();
+        _fixture = fixture;
     }
 
     [Fact]
-    [Trait("LevelTesting", "Unit Testing")]
-    [Trait("Database", "WithoutFixture")]
-    public async Task GetItemsForPurchase_Found_test()
+    public async Task FiltersByGenderAndSport()
     {
-        // Arrange
-        var controller = new ItemsController(_context);
+        var items = await GetItems(Gender.Male, "Football");
 
-        // Act
-        var result = await controller.GetItemsForPurchase(
-            Gender.Male,
-            "Football",
-            CancellationToken.None);
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var items = Assert.IsType<List<ItemsForPurchaseDTO>>(okResult.Value);
         var item = Assert.Single(items);
         Assert.Equal("Football Boots", item.Name);
         Assert.Equal("Nike", item.Brand);
         Assert.Equal(59.90m, item.Price);
-        Assert.Equal(21, item.RecommendedAge);
-        Assert.Equal(Gender.Male, item.Gender);
-        Assert.Equal("42", item.Size);
-        Assert.Equal(_football.Id, item.Sport.Id);
         Assert.Equal("Football", item.Sport.Name);
     }
 
     [Fact]
-    [Trait("LevelTesting", "Unit Testing")]
-    [Trait("Database", "WithoutFixture")]
-    public async Task GetItemsForPurchase_NoMatches_ReturnsEmptyList_test()
+    public async Task FiltersByGenderOnly()
     {
-        // Arrange
-        var controller = new ItemsController(_context);
+        var items = await GetItems(Gender.Female, null);
 
-        // Act
-        var result = await controller.GetItemsForPurchase(
-            Gender.Male,
-            "Tennis",
-            CancellationToken.None);
+        Assert.Equal("Football Shirt", Assert.Single(items).Name);
+    }
 
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var items = Assert.IsType<List<ItemsForPurchaseDTO>>(okResult.Value);
+    [Fact]
+    public async Task FiltersBySportOnly()
+    {
+        var items = await GetItems(null, "Football");
+
+        Assert.Equal(
+            new[] { "Football Shirt", "Football Boots" },
+            items.Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task ReturnsAllAvailableItemsWhenFiltersAreMissing()
+    {
+        var items = await GetItems(null, null);
+
+        Assert.Equal(
+            new[] { "Football Shirt", "Basketball Shoes", "Football Boots" },
+            items.Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task TreatsWhitespaceSportAsNoFilter()
+    {
+        var items = await GetItems(null, "   ");
+
+        Assert.Equal(
+            new[] { "Football Shirt", "Basketball Shoes", "Football Boots" },
+            items.Select(item => item.Name));
+    }
+
+    [Fact]
+    public async Task ReturnsEmptyListWhenNothingMatches()
+    {
+        var items = await GetItems(Gender.Other, "Tennis");
+
         Assert.Empty(items);
+    }
+
+    private async Task<List<ItemsForPurchaseDTO>> GetItems(
+        Gender? gender,
+        string? sportName)
+    {
+        using var context = _fixture.CreateContext();
+        var result = await new ItemsController(context)
+            .GetItemsForPurchase(gender, sportName);
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+
+        return Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
     }
 }

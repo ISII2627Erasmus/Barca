@@ -102,7 +102,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
 
     private static GetPurchaseDTO ToDTO(Purchase purchase)
     {
-        var items = purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
+        var items = purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDetailDTO(
             purchaseItem.Item.Id,
             purchaseItem.Item.Name,
             purchaseItem.Item.Brand,
