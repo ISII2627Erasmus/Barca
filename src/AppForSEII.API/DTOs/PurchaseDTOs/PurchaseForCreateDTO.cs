@@ -4,6 +4,29 @@ namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
 public class PurchaseForCreateDTO
 {
+
+    public PurchaseForCreateDTO(
+        string street,
+        string city,
+        string province,
+        string creditCardNumber,
+        string ccv,
+        string expirationDate,
+        string? purchaseDescription,
+        bool wrapped,
+        List<PurchaseItemDTO> purchaseItems)
+    {
+        Street = street;
+        City = city;
+        Province = province;
+        CreditCardNumber = creditCardNumber;
+        CCV = ccv;
+        ExpirationDate = expirationDate;
+        PurchaseDescription = purchaseDescription;
+        Wrapped = wrapped;
+        PurchaseItems = purchaseItems;
+    }
+
     [Required, StringLength(255, MinimumLength = 3)]
     public string Street { get; set; } = string.Empty;
 
@@ -30,14 +53,38 @@ public class PurchaseForCreateDTO
     public bool Wrapped { get; set; }
 
     [Required]
-    public List<PurchaseItemForCreateDTO> PurchaseItems { get; set; } = new();
-}
+    public List<PurchaseItemDTO> PurchaseItems { get; set; } = new();
 
-public class PurchaseItemForCreateDTO
-{
-    [Range(1, int.MaxValue)]
-    public int ItemId { get; set; }
+    public override bool Equals(object? obj)
+    {
+        return obj is PurchaseForCreateDTO other &&
+               Street == other.Street &&
+               City == other.City &&
+               Province == other.Province &&
+               CreditCardNumber == other.CreditCardNumber &&
+               CCV == other.CCV &&
+               ExpirationDate == other.ExpirationDate &&
+               PurchaseDescription == other.PurchaseDescription &&
+               Wrapped == other.Wrapped &&
+               PurchaseItems.SequenceEqual(other.PurchaseItems);
+    }
 
-    [Range(1, int.MaxValue)]
-    public int Quantity { get; set; }
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Street);
+        hash.Add(City);
+        hash.Add(Province);
+        hash.Add(CreditCardNumber);
+        hash.Add(CCV);
+        hash.Add(ExpirationDate);
+        hash.Add(PurchaseDescription);
+        hash.Add(Wrapped);
+        foreach (var item in PurchaseItems)
+        {
+            hash.Add(item);
+        }
+
+        return hash.ToHashCode();
+    }
 }
