@@ -1,6 +1,8 @@
 using System.Net;
+using System.Security.Claims;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.RefereeDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,7 @@ namespace AppForSEII.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class RefereesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -24,78 +27,99 @@ namespace AppForSEII.API.Controllers
         [HttpGet]
         [Route("[action]")]
         [ProducesResponseType(
-            typeof(List<RefereeForRefereeGroupDTO>),
+            typeof(RefereesForRefereeGroupDTO),
             (int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        [ProducesResponseType(
+            typeof(ValidationProblemDetails),
+            (int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult<List<RefereeForRefereeGroupDTO>>>
+        public async Task<ActionResult<RefereesForRefereeGroupDTO>>
             GetRefereesForRefereeGroup(
-                int gameId,
-                int? minRating = null,
+                int? gameId = null,
                 int? minYearsRefereeing = null)
         {
-            if (minRating.HasValue &&
-                (minRating.Value < 0 || minRating.Value > 5))
+            if (minYearsRefereeing.HasValue && minYearsRefereeing.Value < 1)
             {
-                return BadRequest("Minimum rating must be between 0 and 5.");
+                ModelState.AddModelError(
+                    "minYearsRefereeing",
+                    "Years refereeing must be at least 1.");
+                return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            if (minYearsRefereeing.HasValue &&
-                minYearsRefereeing.Value < 1)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest(
-                    "Minimum years refereeing must be at least 1.");
+                return Unauthorized();
             }
 
-            var game = await _context.Games
-                .Where(item => item.Id == gameId)
+            var games = _context.Games
+                .Where(game =>
+                    game.ResponsibleId == userId &&
+                    game.Date > DateTime.Now &&
+                    game.RefereeGroup == null);
+
+            if (gameId.HasValue)
+            {
+                games = games.Where(game => game.Id == gameId.Value);
+            }
+
+            var game = await games
+                .OrderByDescending(item => item.Id)
                 .Select(item => new
                 {
                     item.Id,
-                    item.SportId
+                    item.Name,
+                    item.Date,
+                    item.Place,
+                    item.SportId,
+                    SportName = item.Sport.Name,
+                    item.Sport.NumberOfReferees
                 })
                 .FirstOrDefaultAsync();
 
             if (game == null)
             {
                 _logger.LogWarning(
-                    "Game with ID {GameId} was not found.",
-                    gameId);
-
+                    "No eligible game was found for user {UserId}.",
+                    userId);
                 return NotFound();
             }
 
-            var query = _context.Referees
+            var refereeQuery = _context.Referees
                 .AsNoTracking()
-                .Where(referee => referee.SportId == game.SportId);
-
-            if (minRating.HasValue)
-            {
-                query = query.Where(
-                    referee => referee.Rating >= minRating.Value);
-            }
+                .Where(referee =>
+                    referee.SportId == game.SportId &&
+                    referee.YearsRefereeing > 0 &&
+                    !referee.RefereeAssignments.Any(assignment =>
+                        assignment.RefereeGroup.Game.Date > DateTime.Now));
 
             if (minYearsRefereeing.HasValue)
             {
-                query = query.Where(
-                    referee =>
-                        referee.YearsRefereeing >= minYearsRefereeing.Value);
+                refereeQuery = refereeQuery.Where(referee =>
+                    referee.YearsRefereeing >= minYearsRefereeing.Value);
             }
 
-            var referees = await query
+            var referees = await refereeQuery
                 .OrderBy(referee => referee.Name)
                 .ThenBy(referee => referee.Surname)
-                .Select(referee => new RefereeForRefereeGroupDTO
-                {
-                    Id = referee.Id,
-                    Name = referee.Name,
-                    Surname = referee.Surname,
-                    Rating = referee.Rating,
-                    YearsRefereeing = referee.YearsRefereeing
-                })
+                .Select(referee => new RefereeForRefereeGroupDTO(
+                    referee.Id,
+                    referee.Name,
+                    referee.Surname,
+                    referee.Rating,
+                    referee.YearsRefereeing))
                 .ToListAsync();
 
-            return Ok(referees);
+            var result = new RefereesForRefereeGroupDTO(
+                game.Id,
+                game.Name,
+                game.Date,
+                game.Place,
+                game.SportName,
+                game.NumberOfReferees,
+                referees);
+
+            return Ok(result);
         }
     }
 }

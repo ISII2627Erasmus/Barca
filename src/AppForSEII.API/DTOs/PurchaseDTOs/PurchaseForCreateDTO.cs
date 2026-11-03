@@ -2,8 +2,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
-public sealed class PurchaseForCreateDTO
+public class PurchaseForCreateDTO
 {
+
     public PurchaseForCreateDTO(
         string street,
         string city,
@@ -11,9 +12,9 @@ public sealed class PurchaseForCreateDTO
         string creditCardNumber,
         string ccv,
         string expirationDate,
-        string? purchaseDescription = null,
-        bool wrapped = false,
-        List<PurchaseItemForCreateDTO>? purchaseItems = null)
+        string? purchaseDescription,
+        bool wrapped,
+        List<PurchaseItemDTO> purchaseItems)
     {
         Street = street;
         City = city;
@@ -23,34 +24,28 @@ public sealed class PurchaseForCreateDTO
         ExpirationDate = expirationDate;
         PurchaseDescription = purchaseDescription;
         Wrapped = wrapped;
-        PurchaseItems = purchaseItems ?? new List<PurchaseItemForCreateDTO>();
+        PurchaseItems = purchaseItems;
     }
 
-    [Required]
-    [StringLength(255, MinimumLength = 3)]
-    public string Street { get; set; }
+    [Required, StringLength(255, MinimumLength = 3)]
+    public string Street { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(255, MinimumLength = 3)]
-    public string City { get; set; }
+    [Required, StringLength(255, MinimumLength = 3)]
+    public string City { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(255, MinimumLength = 3)]
-    public string Province { get; set; }
+    [Required, StringLength(255, MinimumLength = 3)]
+    public string Province { get; set; } = string.Empty;
 
-    [Required]
-    [CreditCard]
-    public string CreditCardNumber { get; set; }
+    [Required, CreditCard]
+    public string CreditCardNumber { get; set; } = string.Empty;
 
-    [Required]
-    [RegularExpression(@"^\d{3,4}$", ErrorMessage = "CCV must be 3 or 4 digits")]
-    public string CCV { get; set; }
+    [Required, RegularExpression(@"^\d{3,4}$", ErrorMessage = "CCV must be 3 or 4 digits")]
+    public string CCV { get; set; } = string.Empty;
 
-    [Required]
-    [RegularExpression(
+    [Required, RegularExpression(
         @"^(0[1-9]|1[0-2])\/?([0-9]{2}|[0-9]{4})$",
         ErrorMessage = "Expiration date must be in MM/YY or MM/YYYY format")]
-    public string ExpirationDate { get; set; }
+    public string ExpirationDate { get; set; } = string.Empty;
 
     [StringLength(255)]
     public string? PurchaseDescription { get; set; }
@@ -58,21 +53,38 @@ public sealed class PurchaseForCreateDTO
     public bool Wrapped { get; set; }
 
     [Required]
-    public List<PurchaseItemForCreateDTO> PurchaseItems { get; set; }
+    public List<PurchaseItemDTO> PurchaseItems { get; set; } = new();
 
-}
-
-public sealed class PurchaseItemForCreateDTO
-{
-    public PurchaseItemForCreateDTO(int itemId, int quantity)
+    public override bool Equals(object? obj)
     {
-        ItemId = itemId;
-        Quantity = quantity;
+        return obj is PurchaseForCreateDTO other &&
+               Street == other.Street &&
+               City == other.City &&
+               Province == other.Province &&
+               CreditCardNumber == other.CreditCardNumber &&
+               CCV == other.CCV &&
+               ExpirationDate == other.ExpirationDate &&
+               PurchaseDescription == other.PurchaseDescription &&
+               Wrapped == other.Wrapped &&
+               PurchaseItems.SequenceEqual(other.PurchaseItems);
     }
 
-    [Range(1, int.MaxValue)]
-    public int ItemId { get; set; }
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Street);
+        hash.Add(City);
+        hash.Add(Province);
+        hash.Add(CreditCardNumber);
+        hash.Add(CCV);
+        hash.Add(ExpirationDate);
+        hash.Add(PurchaseDescription);
+        hash.Add(Wrapped);
+        foreach (var item in PurchaseItems)
+        {
+            hash.Add(item);
+        }
 
-    [Range(1, int.MaxValue)]
-    public int Quantity { get; set; }
+        return hash.ToHashCode();
+    }
 }
