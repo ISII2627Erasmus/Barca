@@ -149,5 +149,31 @@ namespace AppForSEII.UT.TeamsController_test
             var teamActual = Assert.IsType<TeamDetailDTO>(createdResult.Value);
             Assert.Equal(expectedTeam, teamActual);
         }
+        [Fact]
+        [Trait("Database", "WithoutFixture")]
+        [Trait("LevelTesting", "Unit Testing")]
+        public async Task CreateTeam_SaveError_test()
+        {
+            // Arrange
+            var mock = new Mock<ILogger<TeamsController>>();
+            ILogger<TeamsController> logger = mock.Object;
+            var controller = new TeamsController(_context, logger);
+
+            var teamForCreate = new TeamForCreateDTO("Tigers", 5, 18, 40, "Futsal", "petra@uclm.es",
+                new List<TeamInvitationDTO>
+                {
+                    new TeamInvitationDTO("2", "Peter", "Jackson", 30, null!),
+                    new TeamInvitationDTO("3", "Ivan", "Novak", 24, "We need you!"),
+                });
+            
+            // Act
+            var result = await controller.CreateTeam(teamForCreate);
+
+            // Assert
+            //we check that the response type is Conflict and obtain the error returned
+            var conflictResult = Assert.IsType<ConflictObjectResult>(result);
+            Assert.Equal("ErrorAn error occurred while saving the entity changes. See the inner exception for details.", 
+            conflictResult.Value);
+        }
     }
 }
