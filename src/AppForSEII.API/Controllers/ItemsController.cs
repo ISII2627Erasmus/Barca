@@ -8,7 +8,7 @@ namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-ItemsController(ApplicationDbContext context) : ControllerBase
+public class ItemsController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet("[action]")]
     [ProducesResponseType(
