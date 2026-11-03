@@ -404,6 +404,9 @@ namespace AppForSEII.API.Migrations
                     b.Property<int>("MinimumNumberOfPlayers")
                         .HasColumnType("int");
 
+                    b.Property<int>("MinimumNumberOfTeams")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
