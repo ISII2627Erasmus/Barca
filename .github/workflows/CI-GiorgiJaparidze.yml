@@ -5,9 +5,9 @@ name: Giorgi Japaridze Continious Integration Pipeline
 
 on:
   push:
-    branches: [ "CI-GiorgiJaparidze-doesnot exist" ]
+    branches: [ "CI-GiorgiJaparidze" ]
   pull_request:
-    branches: [ "CI-GiorgiJaparidze-doesnot exist" ]
+    branches: [ "CI-GiorgiJaparidze" ]
 
 jobs:
   build:
