@@ -185,15 +185,15 @@ namespace AppForSEII.API.Controllers
                 .ToListAsync();
 
             Team team = new Team
-            {
-                Name = teamForCreate.Name,
-                MaxMembers = teamForCreate.MaxMembers,
-                MinAge = teamForCreate.MinAge,
-                MaxAge = teamForCreate.MaxAge,
-                Captain = captain!,
-                Sport = sport,
-                Description = teamForCreate.Description,
-            };
+            (
+                teamForCreate.Name,
+                teamForCreate.MaxMembers,
+                teamForCreate.MinAge,
+                teamForCreate.MaxAge,
+                captain!,
+                sport,
+                teamForCreate.Description
+            ); 
 
             foreach (var invitation in teamForCreate.TeamInvitations)
             {
