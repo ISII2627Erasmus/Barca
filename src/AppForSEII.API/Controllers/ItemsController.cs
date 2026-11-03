@@ -17,8 +17,7 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
     public async Task<ActionResult<List<ItemsForPurchaseDTO>>>
         GetItemsForPurchase(
             [FromQuery] Gender? gender,
-            [FromQuery] string? sportName,
-            CancellationToken cancellationToken)
+            [FromQuery] string? sportName)
     {
         var query = context.Items
             .AsNoTracking()
@@ -46,7 +45,7 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
                 item.Gender,
                 item.Size,
                 new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name)))
-            .ToListAsync(cancellationToken);
+            .ToListAsync();
 
         return Ok(items);
     }
