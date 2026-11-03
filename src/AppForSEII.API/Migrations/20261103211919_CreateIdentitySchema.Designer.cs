@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppForSEII.API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20261103113353_CreateIdentitySchema")]
+    [Migration("20261103211919_CreateIdentitySchema")]
     partial class CreateIdentitySchema
     {
         /// <inheritdoc />
@@ -406,6 +406,9 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MinimumNumberOfPlayers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinimumNumberOfTeams")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
