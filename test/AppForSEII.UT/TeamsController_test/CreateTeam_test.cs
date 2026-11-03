@@ -7,7 +7,7 @@ namespace AppForSEII.UT.TeamsController_test
     {
         public CreateTeam_test()
         {
-            var sport = new Sport { Name = "Futsal", MinimumNumberOfPlayers = 3, NumberOfReferees = 1, Description = "Futsal description", BasicRules = "Futsal rules" };
+            var sport = new Sport("Futsal", 3, 2, 1, "Futsal description", "Futsal rules");
 
             var users = new List<ApplicationUser>
             {
