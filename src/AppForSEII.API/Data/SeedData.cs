@@ -200,63 +200,68 @@ public class SeedData
         }
     }
 
-    public static void SeedSports(ApplicationDbContext dbContext)
+
+public static void SeedSports(ApplicationDbContext dbContext)
+{
+    var sportsToSeed = new[]
     {
-        var sportsToSeed = new[]
+        new Sport(
+            "Football",
+            11,
+            2,
+            1,
+            "Football is a team sport played between two teams.",
+            "Two teams compete to score goals."
+        ),
+        new Sport(
+            "Basketball",
+            5,
+            2,
+            2,
+            "Basketball is a team sport played on a court.",
+            "Two teams compete to score points by shooting the ball into the basket."
+        ),
+        new Sport(
+            "Futsal",
+            5,
+            2,
+            2,
+            "Futsal is an indoor version of football.",
+            "Two teams of five players compete to score goals."
+        )
+    };
+
+    foreach (var sport in sportsToSeed)
+    {
+        var existingSport = dbContext.Sports
+            .SingleOrDefault(s => s.Name == sport.Name);
+
+        if (existingSport == null)
         {
-            new Sport
-            {
-                Name = "Football",
-                MinimumNumberOfPlayers = 11,
-                NumberOfReferees = 1,
-                Description = "Football is a team sport played between two teams.",
-                BasicRules = "Two teams compete to score goals."
-            },
-            new Sport
-            {
-                Name = "Basketball",
-                MinimumNumberOfPlayers = 5,
-                NumberOfReferees = 2,
-                Description = "Basketball is a team sport played on a court.",
-                BasicRules = "Two teams compete to score points by shooting the ball into the basket."
-            },
-            new Sport
-            {
-                Name = "Futsal",
-                MinimumNumberOfPlayers = 5,
-                NumberOfReferees = 2,
-                Description = "Futsal is an indoor version of football.",
-                BasicRules = "Two teams of five players compete to score goals."
-            }
-        };
-
-        foreach (var sport in sportsToSeed)
-        {
-            var existingSport = dbContext.Sports
-                .SingleOrDefault(s => s.Name == sport.Name);
-
-            if (existingSport == null)
-            {
-                dbContext.Sports.Add(sport);
-            }
-            else
-            {
-                existingSport.MinimumNumberOfPlayers =
-                    sport.MinimumNumberOfPlayers;
-
-                existingSport.NumberOfReferees =
-                    sport.NumberOfReferees;
-
-                existingSport.Description =
-                    sport.Description;
-
-                existingSport.BasicRules =
-                    sport.BasicRules;
-            }
+            dbContext.Sports.Add(sport);
         }
+        else
+        {
+            existingSport.MinimumNumberOfPlayers =
+                sport.MinimumNumberOfPlayers;
 
-        dbContext.SaveChanges();
+            existingSport.MinimumNumberOfTeams =
+                sport.MinimumNumberOfTeams;
+
+            existingSport.NumberOfReferees =
+                sport.NumberOfReferees;
+
+            existingSport.Description =
+                sport.Description;
+
+            existingSport.BasicRules =
+                sport.BasicRules;
+        }
     }
+
+    dbContext.SaveChanges();
+}
+
 
     private static void SeedItems(ApplicationDbContext dbContext)
     {
