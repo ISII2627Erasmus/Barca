@@ -209,14 +209,11 @@ namespace AppForSEII.API.Controllers
                 }
                 else
                 {
-                    team.TeamInvitations.Add(new TeamInvitation
-                    {
-                        UserId = user.Id,
-                        User = user,
-                        Team = team,
-                        InvitationMessage = invitation.InvitationMessage,
-                        InvitationAccepted = false
-                    });
+                    team.TeamInvitations.Add(new TeamInvitation(
+                        user.Id,
+                        team.Id,
+                        invitation.InvitationMessage
+                    ));
                 }
             }
 
