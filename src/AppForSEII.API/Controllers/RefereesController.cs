@@ -32,7 +32,7 @@ namespace AppForSEII.API.Controllers
         [ProducesResponseType(
             typeof(ValidationProblemDetails),
             (int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<RefereesForRefereeGroupDTO>>
             GetRefereesForRefereeGroup(
                 int? gameId = null,
@@ -109,6 +109,15 @@ namespace AppForSEII.API.Controllers
                     referee.Rating,
                     referee.YearsRefereeing))
                 .ToListAsync();
+
+            if (referees.Count == 0)
+            {
+                _logger.LogWarning(
+                    "No referees are available for game {GameId} and the selected filters.",
+                    game.Id);
+                return NotFound(
+                    "No referees are available for the selected game and filters.");
+            }
 
             var result = new RefereesForRefereeGroupDTO(
                 game.Id,

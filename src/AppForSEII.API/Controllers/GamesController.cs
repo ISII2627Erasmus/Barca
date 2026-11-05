@@ -169,6 +169,14 @@ namespace AppForSEII.API.Controllers
                     "All selected teams must belong to the same sport.");
             }
 
+            var minimumNumberOfTeams = selectedTeams[0].Sport.MinimumNumberOfTeams;
+            if (selectedTeams.Count < minimumNumberOfTeams)
+            {
+                return BadRequest(
+                    $"The selected sport requires at least {minimumNumberOfTeams} teams to create a game.");
+            }
+
+
             if (!selectedTeams.Any(team => team.Captain.Id == userId))
             {
                 return StatusCode(

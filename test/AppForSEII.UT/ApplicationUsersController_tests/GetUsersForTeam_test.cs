@@ -9,10 +9,8 @@ namespace AppForSEII.UT.ApplicationUsersController_tests
         {
             var sports = new List<Sport>()
             {
-                new Sport { Name = "Basketball", MinimumNumberOfPlayers = 5, NumberOfReferees = 2,
-                            Description = "Basketball description", BasicRules = "Basketball rules" },
-                new Sport { Name = "Futsal", MinimumNumberOfPlayers = 5, NumberOfReferees = 2,
-                            Description = "Futsal description", BasicRules = "Futsal rules" },
+                new Sport("Basketball", 5, 2, 2, "Basketball description", "Basketball rules"),
+                new Sport("Futsal", 5, 2, 2, "Futsal description", "Futsal rules"),
             };
 
             var users = new List<ApplicationUser>()
