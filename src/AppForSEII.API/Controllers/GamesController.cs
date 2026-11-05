@@ -161,7 +161,8 @@ namespace AppForSEII.API.Controllers
                     "One or more selected teams do not exist.");
             }
 
-            var sportId = selectedTeams[0].Sport.Id;
+            var selectedSport = selectedTeams[0].Sport;
+            var sportId = selectedSport.Id;
 
             if (selectedTeams.Any(team => team.Sport.Id != sportId))
             {
@@ -169,38 +170,43 @@ namespace AppForSEII.API.Controllers
                     "All selected teams must belong to the same sport.");
             }
 
-            var minimumNumberOfTeams = selectedTeams[0].Sport.MinimumNumberOfTeams;
+            var minimumNumberOfTeams = selectedSport.MinimumNumberOfTeams;
+
             if (selectedTeams.Count < minimumNumberOfTeams)
             {
                 return BadRequest(
                     $"The selected sport requires at least {minimumNumberOfTeams} teams to create a game.");
             }
 
+            var responsibleTeam = selectedTeams.FirstOrDefault(
+                team => team.Captain.Id == userId);
 
-            if (!selectedTeams.Any(team => team.Captain.Id == userId))
+            if (responsibleTeam == null)
             {
                 return StatusCode(
                     StatusCodes.Status403Forbidden,
                     "You must be the captain of at least one selected team.");
             }
 
-            var game = new Game
-            {
-                Name = gameDTO.Name,
-                Date = gameDTO.Date,
-                Place = gameDTO.Place,
-                Description = gameDTO.Description,
-                SportId = sportId,
-                ResponsibleId = userId,
-                GameInvitations = gameDTO.GameInvitations
-                    .Select(invitation => new GameInvitation
-                    {
-                        TeamId = invitation.TeamId,
-                        Message = invitation.Message,
-                        AcceptedGame = false
-                    })
-                    .ToList()
-            };
+            var responsible = responsibleTeam.Captain;
+
+            var game = new Game(
+                gameDTO.Name,
+                gameDTO.Date,
+                gameDTO.Place,
+                gameDTO.Description,
+                selectedSport,
+                responsible
+            );
+
+            game.GameInvitations = gameDTO.GameInvitations
+                .Select(invitation => new GameInvitation
+                {
+                    TeamId = invitation.TeamId,
+                    Message = invitation.Message,
+                    AcceptedGame = false
+                })
+                .ToList();
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
@@ -212,7 +218,8 @@ namespace AppForSEII.API.Controllers
                 Date = game.Date,
                 Place = game.Place,
                 Description = game.Description,
-                SportName = selectedTeams[0].Sport.Name,
+                SportName = selectedSport.Name,
+
                 InvitedTeams = gameDTO.GameInvitations
                     .Select(invitation =>
                     {
