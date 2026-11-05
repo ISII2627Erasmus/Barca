@@ -17,7 +17,8 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 	[Fact]
 	public async Task WithoutUser_ReturnsUnauthorized()
 	{
-		var result = await GetPurchase(null, 1);
+		var result = await GetPurchase(null, 1); //null produces an empty principal, with no user ID claim.
+												 //String such as purchase-user produces a principal with a NameIdentifier claim containing that string.
 		
 		Assert.IsType<UnauthorizedResult>(result.Result);
 	}
@@ -39,13 +40,27 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 		
 		var response = Assert.IsType<OkObjectResult>(result.Result);
 		var actual = Assert.IsType<GetPurchaseDTO>(response.Value);
-		var item = Assert.Single(actual.PurchaseItems);
-		Assert.Equal(purchase.Id, actual.Id);
-		Assert.Equal("Taylor", actual.User.Name);
-		Assert.Equal("Smith", actual.User.Surname);
-		Assert.Equal(purchase.TotalPrice, actual.TotalPrice);
-		Assert.Equal("Football Boots", item.Name);
-		Assert.Equal(2, item.Quantity);
+		var expected = new GetPurchaseDTO(
+			purchase.Id,
+			purchase.PurchaseDate,
+			"Fixture purchase",
+			purchase.TotalPrice,
+			false,
+			new PurchaseUserDTO("Taylor", "Smith"),
+			new List<PurchaseItemDetailDTO>
+			{
+				new(
+					_fixture.FootballBoots.Id,
+					"Football Boots",
+					"Nike",
+					59.90m,
+					21,
+					Gender.Male,
+					"42",
+					2)
+			});
+
+		Assert.Equal(expected, actual);
 	}
 	
 	private async Task<ActionResult<GetPurchaseDTO>> GetPurchase(
@@ -66,7 +81,7 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 	
 	private async Task<Purchase> SavePurchase()
 	{
-		using var context = _fixture.CreateContext();
+		using var context = _fixture.CreateContext(); // Creating data in class fixture
 		var user = await context.ApplicationUsers
 		.SingleAsync(user => user.Id == _fixture.Customer.Id);
 		var item = await context.Items
@@ -80,8 +95,5 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 	}
 	
 	private static ClaimsPrincipal CreateUser(string? userId) => userId is null
-	? new ClaimsPrincipal()
-	: new ClaimsPrincipal(new ClaimsIdentity(
-		new[] { new Claim(ClaimTypes.NameIdentifier, userId) },
-											 "UnitTest"));
+	? new ClaimsPrincipal(): new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "UnitTest"));
 }
