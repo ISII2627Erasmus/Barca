@@ -17,11 +17,9 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
     {
         var items = await GetItems(Gender.Male, "Football");
 
-        var item = Assert.Single(items);
-        Assert.Equal("Football Boots", item.Name);
-        Assert.Equal("Nike", item.Brand);
-        Assert.Equal(59.90m, item.Price);
-        Assert.Equal("Football", item.Sport.Name);
+        Assert.Equal(
+            new[] { ExpectedItem(_fixture.FootballBoots) },
+            items);
     }
 
     [Fact]
@@ -29,7 +27,9 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
     {
         var items = await GetItems(Gender.Female, null);
 
-        Assert.Equal("Football Shirt", Assert.Single(items).Name);
+        Assert.Equal(
+            new[] { ExpectedItem(_fixture.FootballShirt) },
+            items);
     }
 
     [Fact]
@@ -38,8 +38,12 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
         var items = await GetItems(null, "Football");
 
         Assert.Equal(
-            new[] { "Football Shirt", "Football Boots" },
-            items.Select(item => item.Name));
+            new[]
+            {
+                ExpectedItem(_fixture.FootballShirt),
+                ExpectedItem(_fixture.FootballBoots)
+            },
+            items);
     }
 
     [Fact]
@@ -48,8 +52,13 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
         var items = await GetItems(null, null);
 
         Assert.Equal(
-            new[] { "Football Shirt", "Basketball Shoes", "Football Boots" },
-            items.Select(item => item.Name));
+            new[]
+            {
+                ExpectedItem(_fixture.FootballShirt),
+                ExpectedItem(_fixture.BasketballShoes),
+                ExpectedItem(_fixture.FootballBoots)
+            },
+            items);
     }
 
     [Fact]
@@ -58,8 +67,13 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
         var items = await GetItems(null, "   ");
 
         Assert.Equal(
-            new[] { "Football Shirt", "Basketball Shoes", "Football Boots" },
-            items.Select(item => item.Name));
+            new[]
+            {
+                ExpectedItem(_fixture.FootballShirt),
+                ExpectedItem(_fixture.BasketballShoes),
+                ExpectedItem(_fixture.FootballBoots)
+            },
+            items);
     }
 
     [Fact]
@@ -80,5 +94,18 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
         var response = Assert.IsType<OkObjectResult>(result.Result);
 
         return Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+    }
+
+    private static ItemsForPurchaseDTO ExpectedItem(Item item)
+    {
+        return new ItemsForPurchaseDTO(
+            item.Id,
+            item.Name,
+            item.Brand,
+            item.Price,
+            item.RecommendedAge,
+            item.Gender,
+            item.Size,
+            new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name));
     }
 }
