@@ -55,36 +55,34 @@ namespace AppForSEII.UT
             using var context = new ApplicationDbContext(options);
             await context.Database.EnsureCreatedAsync();
 
-            var sport = new Sport
-            {
-                Name = "Football",
-                MinimumNumberOfPlayers = 11,
-                NumberOfReferees = 1,
-                Description = "Football sport",
-                BasicRules = "Standard football rules"
-            };
+            var sport = new Sport(
+                "Football",
+                11,
+                2,
+                1,
+                "Football sport",
+                "Standard football rules"
+            );
 
-            var responsible = new ApplicationUser
+            var responsible = new ApplicationUser(
+                "user-1",
+                "Test",
+                "User",
+                "testuser@example.com"
+            )
             {
-                Id = "user-1",
-                UserName = "testuser@example.com",
-                Email = "testuser@example.com",
-                Name = "Test",
-                Surname = "User",
                 BirthDate = new DateOnly(2000, 1, 1),
                 Age = 26
             };
 
-            var game = new Game
-            {
-                Name = "Friendly Match",
-                Date = new DateTime(2026, 11, 10),
-                Place = "Albacete Stadium",
-                Description = "Friendly football match",
-                Sport = sport,
-                Responsible = responsible,
-                ResponsibleId = responsible.Id
-            };
+            var game = new Game(
+                "Friendly Match",
+                new DateTime(2026, 11, 10),
+                "Albacete Stadium",
+                "Friendly football match",
+                sport,
+                responsible
+            );
 
             context.Games.Add(game);
             await context.SaveChangesAsync();
@@ -99,15 +97,20 @@ namespace AppForSEII.UT
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var gameDTO = Assert.IsType<GetGameDTO>(okResult.Value);
+            var actualDTO = Assert.IsType<GetGameDTO>(okResult.Value);
 
-            Assert.Equal(game.Id, gameDTO.Id);
-            Assert.Equal("Friendly Match", gameDTO.Name);
-            Assert.Equal(new DateTime(2026, 11, 10), gameDTO.Date);
-            Assert.Equal("Albacete Stadium", gameDTO.Place);
-            Assert.Equal("Friendly football match", gameDTO.Description);
-            Assert.Equal("Football", gameDTO.SportName);
-            Assert.Empty(gameDTO.InvitedTeams);
+            var expectedDTO = new GetGameDTO
+            {
+                Id = game.Id,
+                Name = "Friendly Match",
+                Date = new DateTime(2026, 11, 10),
+                Place = "Albacete Stadium",
+                Description = "Friendly football match",
+                SportName = "Football",
+                InvitedTeams = new List<InvitedTeamDTO>()
+            };
+
+            Assert.Equal(expectedDTO, actualDTO);
         }
 
         // TC3: Game has invited teams -> correct team details and member count
@@ -125,50 +128,65 @@ namespace AppForSEII.UT
             using var context = new ApplicationDbContext(options);
             await context.Database.EnsureCreatedAsync();
 
-            var sport = new Sport
-            {
-                Name = "Basketball",
-                MinimumNumberOfPlayers = 5,
-                NumberOfReferees = 2,
-                Description = "Basketball sport",
-                BasicRules = "Standard basketball rules"
-            };
+            var sport = new Sport(
+                "Basketball",
+                5,
+                2,
+                2,
+                "Basketball sport",
+                "Standard basketball rules"
+            );
 
             var responsible = new ApplicationUser(
-                "responsible-1", "Test", "Organizer",
-                "organizer@example.com")
+                "responsible-1",
+                "Test",
+                "Organizer",
+                "organizer@example.com"
+            )
             {
                 BirthDate = new DateOnly(1998, 1, 1),
                 Age = 28
             };
 
             var captain = new ApplicationUser(
-                "captain-1", "John", "Smith",
-                "captain@example.com")
+                "captain-1",
+                "John",
+                "Smith",
+                "captain@example.com"
+            )
             {
                 BirthDate = new DateOnly(2000, 1, 1),
                 Age = 26
             };
 
             var member1 = new ApplicationUser(
-                "member-1", "Alice", "Brown",
-                "alice@example.com")
+                "member-1",
+                "Alice",
+                "Brown",
+                "alice@example.com"
+            )
             {
                 BirthDate = new DateOnly(2002, 1, 1),
                 Age = 24
             };
 
             var member2 = new ApplicationUser(
-                "member-2", "Bob", "Wilson",
-                "bob@example.com")
+                "member-2",
+                "Bob",
+                "Wilson",
+                "bob@example.com"
+            )
             {
                 BirthDate = new DateOnly(2001, 1, 1),
                 Age = 25
             };
 
             var member3 = new ApplicationUser(
-                "member-3", "Emma", "Davis",
-                "emma@example.com")
+                "member-3",
+                "Emma",
+                "Davis",
+                "emma@example.com"
+            )
             {
                 BirthDate = new DateOnly(2003, 1, 1),
                 Age = 23
@@ -208,16 +226,14 @@ namespace AppForSEII.UT
                 InvitationAccepted = false
             });
 
-            var game = new Game
-            {
-                Name = "Basketball Match",
-                Date = new DateTime(2026, 11, 15),
-                Place = "Albacete Sports Center",
-                Description = "Friendly basketball game",
-                Sport = sport,
-                Responsible = responsible,
-                ResponsibleId = responsible.Id
-            };
+            var game = new Game(
+                "Basketball Match",
+                new DateTime(2026, 11, 15),
+                "Albacete Sports Center",
+                "Friendly basketball game",
+                sport,
+                responsible
+            );
 
             var invitation = new GameInvitation
             {
@@ -242,26 +258,33 @@ namespace AppForSEII.UT
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var gameDTO = Assert.IsType<GetGameDTO>(okResult.Value);
+            var actualDTO = Assert.IsType<GetGameDTO>(okResult.Value);
 
-            Assert.Equal(game.Id, gameDTO.Id);
-            Assert.Equal("Basketball Match", gameDTO.Name);
-            Assert.Equal("Basketball", gameDTO.SportName);
+            var expectedDTO = new GetGameDTO
+            {
+                Id = game.Id,
+                Name = "Basketball Match",
+                Date = new DateTime(2026, 11, 15),
+                Place = "Albacete Sports Center",
+                Description = "Friendly basketball game",
+                SportName = "Basketball",
+                InvitedTeams = new List<InvitedTeamDTO>
+                {
+                    new InvitedTeamDTO(
+                        team.Id,
+                        "Tigers",
+                        "John",
+                        "Smith",
+                        3,
+                        18,
+                        35,
+                        "Basketball",
+                        "You are invited to our basketball match"
+                    )
+                }
+            };
 
-            var invitedTeam = Assert.Single(gameDTO.InvitedTeams);
-
-            Assert.Equal(team.Id, invitedTeam.TeamId);
-            Assert.Equal("Tigers", invitedTeam.TeamName);
-            Assert.Equal("John", invitedTeam.CaptainName);
-            Assert.Equal("Smith", invitedTeam.CaptainSurname);
-            Assert.Equal(3, invitedTeam.NumberOfMembers);
-            Assert.Equal(18, invitedTeam.MinAge);
-            Assert.Equal(35, invitedTeam.MaxAge);
-            Assert.Equal("Basketball", invitedTeam.SportName);
-            Assert.Equal(
-                "You are invited to our basketball match",
-                invitedTeam.Message
-            );
+            Assert.Equal(expectedDTO, actualDTO);
         }
     }
 }

@@ -60,20 +60,19 @@ namespace AppForSEII.API.Controllers
                 SportName = game.Sport.Name,
 
                 InvitedTeams = game.GameInvitations
-                    .Select(invitation => new InvitedTeamDTO
-                    {
-                        TeamId = invitation.Team.Id,
-                        TeamName = invitation.Team.Name,
-                        CaptainName = invitation.Team.Captain.Name ?? "",
-                        CaptainSurname = invitation.Team.Captain.Surname ?? "",
-                        NumberOfMembers = 1 + invitation.Team.TeamInvitations
-                            .Count(memberInvitation =>
+                    .Select(invitation => new InvitedTeamDTO(
+                        invitation.Team.Id,
+                        invitation.Team.Name,
+                        invitation.Team.Captain.Name ?? "",
+                        invitation.Team.Captain.Surname ?? "",
+                        1 + invitation.Team.TeamInvitations.Count(
+                            memberInvitation =>
                                 memberInvitation.InvitationAccepted),
-                        MinAge = invitation.Team.MinAge,
-                        MaxAge = invitation.Team.MaxAge,
-                        SportName = invitation.Team.Sport.Name,
-                        Message = invitation.Message
-                    })
+                        invitation.Team.MinAge,
+                        invitation.Team.MaxAge,
+                        invitation.Team.Sport.Name,
+                        invitation.Message
+                    ))
                     .ToList()
             };
 
@@ -161,7 +160,8 @@ namespace AppForSEII.API.Controllers
                     "One or more selected teams do not exist.");
             }
 
-            var sportId = selectedTeams[0].Sport.Id;
+            var selectedSport = selectedTeams[0].Sport;
+            var sportId = selectedSport.Id;
 
             if (selectedTeams.Any(team => team.Sport.Id != sportId))
             {
@@ -169,38 +169,43 @@ namespace AppForSEII.API.Controllers
                     "All selected teams must belong to the same sport.");
             }
 
-            var minimumNumberOfTeams = selectedTeams[0].Sport.MinimumNumberOfTeams;
+            var minimumNumberOfTeams = selectedSport.MinimumNumberOfTeams;
+
             if (selectedTeams.Count < minimumNumberOfTeams)
             {
                 return BadRequest(
                     $"The selected sport requires at least {minimumNumberOfTeams} teams to create a game.");
             }
 
+            var responsibleTeam = selectedTeams.FirstOrDefault(
+                team => team.Captain.Id == userId);
 
-            if (!selectedTeams.Any(team => team.Captain.Id == userId))
+            if (responsibleTeam == null)
             {
                 return StatusCode(
                     StatusCodes.Status403Forbidden,
                     "You must be the captain of at least one selected team.");
             }
 
-            var game = new Game
-            {
-                Name = gameDTO.Name,
-                Date = gameDTO.Date,
-                Place = gameDTO.Place,
-                Description = gameDTO.Description,
-                SportId = sportId,
-                ResponsibleId = userId,
-                GameInvitations = gameDTO.GameInvitations
-                    .Select(invitation => new GameInvitation
-                    {
-                        TeamId = invitation.TeamId,
-                        Message = invitation.Message,
-                        AcceptedGame = false
-                    })
-                    .ToList()
-            };
+            var responsible = responsibleTeam.Captain;
+
+            var game = new Game(
+                gameDTO.Name,
+                gameDTO.Date,
+                gameDTO.Place,
+                gameDTO.Description,
+                selectedSport,
+                responsible
+            );
+
+            game.GameInvitations = gameDTO.GameInvitations
+                .Select(invitation => new GameInvitation
+                {
+                    TeamId = invitation.TeamId,
+                    Message = invitation.Message,
+                    AcceptedGame = false
+                })
+                .ToList();
 
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
@@ -212,7 +217,8 @@ namespace AppForSEII.API.Controllers
                 Date = game.Date,
                 Place = game.Place,
                 Description = game.Description,
-                SportName = selectedTeams[0].Sport.Name,
+                SportName = selectedSport.Name,
+
                 InvitedTeams = gameDTO.GameInvitations
                     .Select(invitation =>
                     {
@@ -220,20 +226,19 @@ namespace AppForSEII.API.Controllers
                             selectedTeam =>
                                 selectedTeam.Id == invitation.TeamId);
 
-                        return new InvitedTeamDTO
-                        {
-                            TeamId = team.Id,
-                            TeamName = team.Name,
-                            CaptainName = team.Captain.Name ?? "",
-                            CaptainSurname = team.Captain.Surname ?? "",
-                            NumberOfMembers = 1 + team.TeamInvitations
-                                .Count(memberInvitation =>
+                        return new InvitedTeamDTO(
+                            team.Id,
+                            team.Name,
+                            team.Captain.Name ?? "",
+                            team.Captain.Surname ?? "",
+                            1 + team.TeamInvitations.Count(
+                                memberInvitation =>
                                     memberInvitation.InvitationAccepted),
-                            MinAge = team.MinAge,
-                            MaxAge = team.MaxAge,
-                            SportName = team.Sport.Name,
-                            Message = invitation.Message
-                        };
+                            team.MinAge,
+                            team.MaxAge,
+                            team.Sport.Name,
+                            invitation.Message
+                        );
                     })
                     .ToList()
             };
