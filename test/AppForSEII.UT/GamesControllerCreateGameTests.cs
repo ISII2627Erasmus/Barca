@@ -432,34 +432,32 @@ public class GamesControllerCreateGameTests
             SportName = firstTeam.Sport.Name,
             InvitedTeams = new List<InvitedTeamDTO>
             {
-                new InvitedTeamDTO
-                {
-                    TeamId = firstTeam.Team.Id,
-                    TeamName = firstTeam.Team.Name,
-                    CaptainName = firstTeam.Captain.Name,
-                    CaptainSurname = firstTeam.Captain.Surname,
-                    NumberOfMembers = 1,
-                    MinAge = firstTeam.Team.MinAge,
-                    MaxAge = firstTeam.Team.MaxAge,
-                    SportName = firstTeam.Sport.Name,
-                    Message = "Invitation for the first team"
-                },
-                new InvitedTeamDTO
-                {
-                    TeamId = secondTeam.Id,
-                    TeamName = secondTeam.Name,
-                    CaptainName = secondTeam.Captain.Name,
-                    CaptainSurname = secondTeam.Captain.Surname,
-                    NumberOfMembers = 1,
-                    MinAge = secondTeam.MinAge,
-                    MaxAge = secondTeam.MaxAge,
-                    SportName = firstTeam.Sport.Name,
-                    Message = "Invitation for the second team"
-                }
+                new InvitedTeamDTO(
+                    firstTeam.Team.Id,
+                    firstTeam.Team.Name,
+                    firstTeam.Captain.Name ?? "",
+                    firstTeam.Captain.Surname ?? "",
+                    1,
+                    firstTeam.Team.MinAge,
+                    firstTeam.Team.MaxAge,
+                    firstTeam.Sport.Name,
+                    "Invitation for the first team"
+                ),
+                new InvitedTeamDTO(
+                    secondTeam.Id,
+                    secondTeam.Name,
+                    secondTeam.Captain.Name ?? "",
+                    secondTeam.Captain.Surname ?? "",
+                    1,
+                    secondTeam.MinAge,
+                    secondTeam.MaxAge,
+                    firstTeam.Sport.Name,
+                    "Invitation for the second team"
+                )
             }
         };
 
-        Assert.True(expectedResponse.Equals(response));
+        Assert.Equal(expectedResponse, response);
 
         Assert.Equal(UserId, savedGame.ResponsibleId);
         Assert.Equal(firstTeam.Sport.Id, savedGame.SportId);

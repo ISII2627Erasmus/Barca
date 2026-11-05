@@ -1,7 +1,30 @@
+
 namespace AppForSEII.API.DTOs.GameDTOs;
 
 public class InvitedTeamDTO
 {
+    public InvitedTeamDTO(
+        int teamId,
+        string teamName,
+        string captainName,
+        string captainSurname,
+        int numberOfMembers,
+        int minAge,
+        int maxAge,
+        string sportName,
+        string message)
+    {
+        TeamId = teamId;
+        TeamName = teamName ?? throw new ArgumentNullException(nameof(teamName));
+        CaptainName = captainName ?? throw new ArgumentNullException(nameof(captainName));
+        CaptainSurname = captainSurname ?? throw new ArgumentNullException(nameof(captainSurname));
+        NumberOfMembers = numberOfMembers;
+        MinAge = minAge;
+        MaxAge = maxAge;
+        SportName = sportName ?? throw new ArgumentNullException(nameof(sportName));
+        Message = message ?? throw new ArgumentNullException(nameof(message));
+    }
+
     public int TeamId { get; set; }
 
     public string TeamName { get; set; } = string.Empty;

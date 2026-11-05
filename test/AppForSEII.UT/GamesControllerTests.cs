@@ -110,7 +110,7 @@ namespace AppForSEII.UT
                 InvitedTeams = new List<InvitedTeamDTO>()
             };
 
-            Assert.True(expectedDTO.Equals(actualDTO));
+            Assert.Equal(expectedDTO, actualDTO);
         }
 
         // TC3: Game has invited teams -> correct team details and member count
@@ -270,22 +270,21 @@ namespace AppForSEII.UT
                 SportName = "Basketball",
                 InvitedTeams = new List<InvitedTeamDTO>
                 {
-                    new InvitedTeamDTO
-                    {
-                        TeamId = team.Id,
-                        TeamName = "Tigers",
-                        CaptainName = "John",
-                        CaptainSurname = "Smith",
-                        NumberOfMembers = 3,
-                        MinAge = 18,
-                        MaxAge = 35,
-                        SportName = "Basketball",
-                        Message = "You are invited to our basketball match"
-                    }
+                    new InvitedTeamDTO(
+                        team.Id,
+                        "Tigers",
+                        "John",
+                        "Smith",
+                        3,
+                        18,
+                        35,
+                        "Basketball",
+                        "You are invited to our basketball match"
+                    )
                 }
             };
 
-            Assert.True(expectedDTO.Equals(actualDTO));
+            Assert.Equal(expectedDTO, actualDTO);
         }
     }
 }

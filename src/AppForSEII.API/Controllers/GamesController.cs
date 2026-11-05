@@ -60,20 +60,19 @@ namespace AppForSEII.API.Controllers
                 SportName = game.Sport.Name,
 
                 InvitedTeams = game.GameInvitations
-                    .Select(invitation => new InvitedTeamDTO
-                    {
-                        TeamId = invitation.Team.Id,
-                        TeamName = invitation.Team.Name,
-                        CaptainName = invitation.Team.Captain.Name ?? "",
-                        CaptainSurname = invitation.Team.Captain.Surname ?? "",
-                        NumberOfMembers = 1 + invitation.Team.TeamInvitations
-                            .Count(memberInvitation =>
+                    .Select(invitation => new InvitedTeamDTO(
+                        invitation.Team.Id,
+                        invitation.Team.Name,
+                        invitation.Team.Captain.Name ?? "",
+                        invitation.Team.Captain.Surname ?? "",
+                        1 + invitation.Team.TeamInvitations.Count(
+                            memberInvitation =>
                                 memberInvitation.InvitationAccepted),
-                        MinAge = invitation.Team.MinAge,
-                        MaxAge = invitation.Team.MaxAge,
-                        SportName = invitation.Team.Sport.Name,
-                        Message = invitation.Message
-                    })
+                        invitation.Team.MinAge,
+                        invitation.Team.MaxAge,
+                        invitation.Team.Sport.Name,
+                        invitation.Message
+                    ))
                     .ToList()
             };
 
@@ -227,20 +226,19 @@ namespace AppForSEII.API.Controllers
                             selectedTeam =>
                                 selectedTeam.Id == invitation.TeamId);
 
-                        return new InvitedTeamDTO
-                        {
-                            TeamId = team.Id,
-                            TeamName = team.Name,
-                            CaptainName = team.Captain.Name ?? "",
-                            CaptainSurname = team.Captain.Surname ?? "",
-                            NumberOfMembers = 1 + team.TeamInvitations
-                                .Count(memberInvitation =>
+                        return new InvitedTeamDTO(
+                            team.Id,
+                            team.Name,
+                            team.Captain.Name ?? "",
+                            team.Captain.Surname ?? "",
+                            1 + team.TeamInvitations.Count(
+                                memberInvitation =>
                                     memberInvitation.InvitationAccepted),
-                            MinAge = team.MinAge,
-                            MaxAge = team.MaxAge,
-                            SportName = team.Sport.Name,
-                            Message = invitation.Message
-                        };
+                            team.MinAge,
+                            team.MaxAge,
+                            team.Sport.Name,
+                            invitation.Message
+                        );
                     })
                     .ToList()
             };
