@@ -25,23 +25,11 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
 
     public CreateRefereeGroup_test()
     {
-        _football = new Sport
-        {
-            Name = "Test Football",
-            MinimumNumberOfPlayers = 11,
-            NumberOfReferees = 2,
-            Description = "Test football",
-            BasicRules = "Test rules"
-        };
+        _football = new Sport(
+            "Test Football", 11, 2, 2, "Test football", "Test rules");
 
-        _basketball = new Sport
-        {
-            Name = "Test Basketball",
-            MinimumNumberOfPlayers = 5,
-            NumberOfReferees = 1,
-            Description = "Test basketball",
-            BasicRules = "Test rules"
-        };
+        _basketball = new Sport(
+            "Test Basketball", 5, 2, 1, "Test basketball", "Test rules");
 
         _context.Sports.AddRange(_football, _basketball);
         _context.SaveChanges();

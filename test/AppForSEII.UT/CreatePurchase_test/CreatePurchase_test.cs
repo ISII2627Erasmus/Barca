@@ -86,10 +86,37 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
 
         var created = Assert.IsType<CreatedAtActionResult>(result.Result);
         var purchase = Assert.IsType<GetPurchaseDTO>(created.Value);
+<<<<<<< HEAD
         Assert.Equal(nameof(PurchasesController.GetPurchase), created.ActionName);
         Assert.Equal(purchase.Id, Assert.IsType<int>(created.RouteValues!["id"]));
         Assert.Equal(119.80m, purchase.TotalPrice);
         Assert.Equal(2, Assert.Single(purchase.PurchaseItems).Quantity);
+=======
+
+        var expected = new GetPurchaseDTO(
+            purchase.Id,
+            purchase.PurchaseDate,
+            "Purchase test",
+            119.80m,
+            true,
+            new PurchaseUserDTO("Taylor", "Smith"),
+            new List<PurchaseItemDetailDTO>
+            {
+                new(
+                    _fixture.FootballBoots.Id,
+                    "Football Boots",
+                    "Nike",
+                    59.90m,
+                    21,
+                    Gender.Male,
+                    "42",
+                    2)
+            });
+
+        Assert.Equal(expected, purchase);
+        Assert.Equal(nameof(PurchasesController.GetPurchase), created.ActionName);
+        Assert.Equal(purchase.Id, Assert.IsType<int>(created.RouteValues!["id"]));
+>>>>>>> development
         Assert.Equal(stockBefore - 2, await GetStock());
     }
 
