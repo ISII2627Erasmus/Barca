@@ -7,22 +7,14 @@ using Microsoft.EntityFrameworkCore;
 namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
-[ApiController]
+[ApiController] // Includes Checks of DTO Validation attributes are in order, throws an error if not
 public class ItemsController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet("[action]")]
-    [ProducesResponseType(
-        typeof(List<ItemsForPurchaseDTO>),
-        StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ItemsForPurchaseDTO>), StatusCodes.Status200OK)] // Swagger
     public async Task<ActionResult<List<ItemsForPurchaseDTO>>>
-        GetItemsForPurchase(
-            [FromQuery] Gender? gender,
-            [FromQuery] string? sportName)
-    {
-        var query = context.Items
-            .AsNoTracking()
-            .Where(item => item.QuantityAvailableForPurchase > 0);
-
+    GetItemsForPurchase([FromQuery] Gender? gender, [FromQuery] string? sportName) {
+        var query = context.Items.AsNoTracking().Where(item => item.QuantityAvailableForPurchase > 0);
         if (gender.HasValue)
         {
             query = query.Where(item => item.Gender == gender.Value);
@@ -46,7 +38,6 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
                 item.Size,
                 new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name)))
             .ToListAsync();
-
         return Ok(items);
     }
 }

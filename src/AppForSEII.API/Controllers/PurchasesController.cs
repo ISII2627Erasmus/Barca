@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
-[ApiController]
+[ApiController] // Includes Checks of DTO Validation attributes are in order, throws an error if not
 [Authorize]
 public class PurchasesController(ApplicationDbContext context) : ControllerBase
 {
@@ -36,7 +36,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
     public async Task<ActionResult<GetPurchaseDTO>> CreatePurchase(
         [FromBody] PurchaseForCreateDTO dto)
     {
-        var itemIds = dto.PurchaseItems.Select(item => item.ItemId).ToList();
+        var itemIds = dto.PurchaseItems.Select(item => item.ItemId).ToList(); // Take all the items from PurchaseItems table
         if (itemIds.Count == 0 || itemIds.Distinct().Count() != itemIds.Count)
             return BadRequest("Select at least one item, without duplicates.");
 
@@ -52,9 +52,8 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         await using var transaction = await context.Database
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
-        var items = await context.Items
-            .Where(item => itemIds.Contains(item.Id))
-            .ToListAsync();
+        // Load Items from Items table which have the same ID as items from Purchase ID
+        var items = await context.Items.Where(item => itemIds.Contains(item.Id)).ToListAsync();
         if (items.Count != itemIds.Count)
             return BadRequest("A selected item does not exist.");
 

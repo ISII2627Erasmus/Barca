@@ -48,15 +48,7 @@ public class ItemsForPurchaseDTO
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(
-            Id,
-            Name,
-            Brand,
-            Price,
-            RecommendedAge,
-            Gender,
-            Size,
-            Sport);
+        return HashCode.Combine(Id, Name, Brand, Price, RecommendedAge, Gender, Size, Sport);
     }
 }
 
@@ -77,9 +69,7 @@ public class SportForPurchaseDTO
 
     public override bool Equals(object? obj)
     {
-        return obj is SportForPurchaseDTO other &&
-               Id == other.Id &&
-               Name == other.Name;
+        return obj is SportForPurchaseDTO other && Id == other.Id && Name == other.Name;
     }
 
     public override int GetHashCode()

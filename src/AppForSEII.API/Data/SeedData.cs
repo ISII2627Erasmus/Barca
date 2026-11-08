@@ -38,6 +38,7 @@ public class SeedData
         SeedGame(dbContext);
         SeedReferees(dbContext, userManager);
         SeedItems(dbContext);
+        SeedPurchase(dbContext);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
@@ -200,68 +201,63 @@ public class SeedData
         }
     }
 
-
-public static void SeedSports(ApplicationDbContext dbContext)
-{
-    var sportsToSeed = new[]
+    public static void SeedSports(ApplicationDbContext dbContext)
     {
-        new Sport(
-            "Football",
-            11,
-            2,
-            1,
-            "Football is a team sport played between two teams.",
-            "Two teams compete to score goals."
-        ),
-        new Sport(
-            "Basketball",
-            5,
-            2,
-            2,
-            "Basketball is a team sport played on a court.",
-            "Two teams compete to score points by shooting the ball into the basket."
-        ),
-        new Sport(
-            "Futsal",
-            5,
-            2,
-            2,
-            "Futsal is an indoor version of football.",
-            "Two teams of five players compete to score goals."
-        )
-    };
-
-    foreach (var sport in sportsToSeed)
-    {
-        var existingSport = dbContext.Sports
-            .SingleOrDefault(s => s.Name == sport.Name);
-
-        if (existingSport == null)
+        var sportsToSeed = new[]
         {
-            dbContext.Sports.Add(sport);
-        }
-        else
+            new Sport
+            {
+                Name = "Football",
+                MinimumNumberOfPlayers = 11,
+                NumberOfReferees = 1,
+                Description = "Football is a team sport played between two teams.",
+                BasicRules = "Two teams compete to score goals."
+            },
+            new Sport
+            {
+                Name = "Basketball",
+                MinimumNumberOfPlayers = 5,
+                NumberOfReferees = 2,
+                Description = "Basketball is a team sport played on a court.",
+                BasicRules = "Two teams compete to score points by shooting the ball into the basket."
+            },
+            new Sport
+            {
+                Name = "Futsal",
+                MinimumNumberOfPlayers = 5,
+                NumberOfReferees = 2,
+                Description = "Futsal is an indoor version of football.",
+                BasicRules = "Two teams of five players compete to score goals."
+            }
+        };
+
+        foreach (var sport in sportsToSeed)
         {
-            existingSport.MinimumNumberOfPlayers =
-                sport.MinimumNumberOfPlayers;
+            var existingSport = dbContext.Sports
+                .SingleOrDefault(s => s.Name == sport.Name);
 
-            existingSport.MinimumNumberOfTeams =
-                sport.MinimumNumberOfTeams;
+            if (existingSport == null)
+            {
+                dbContext.Sports.Add(sport);
+            }
+            else
+            {
+                existingSport.MinimumNumberOfPlayers =
+                    sport.MinimumNumberOfPlayers;
 
-            existingSport.NumberOfReferees =
-                sport.NumberOfReferees;
+                existingSport.NumberOfReferees =
+                    sport.NumberOfReferees;
 
-            existingSport.Description =
-                sport.Description;
+                existingSport.Description =
+                    sport.Description;
 
-            existingSport.BasicRules =
-                sport.BasicRules;
+                existingSport.BasicRules =
+                    sport.BasicRules;
+            }
         }
+
+        dbContext.SaveChanges();
     }
-
-    dbContext.SaveChanges();
-}
-
 
     private static void SeedItems(ApplicationDbContext dbContext)
     {
@@ -305,6 +301,42 @@ public static void SeedSports(ApplicationDbContext dbContext)
 
         dbContext.SaveChanges();
     }
+
+    private static void SeedPurchase(ApplicationDbContext dbContext)
+    {
+        const string customerEmail = "giorgi.japaridze1@alu.uclm.es";
+        const string purchaseDescription = "Seed purchase for GetPurchase";
+
+        // SeedData runs whenever the API starts, so I do a check in order to not create this purchase twice.
+        if (dbContext.Purchases.Any(purchase => purchase.User.Email == customerEmail && purchase.PurchaseDescription == purchaseDescription))
+        {
+            return;
+        }
+
+        ApplicationUser customer = dbContext.ApplicationUsers.Single(user => user.Email == customerEmail);
+        Item football = dbContext.Items.Single(item => item.Name == "Football");
+        Item basketballShoes = dbContext.Items.Single(item => item.Name == "Basketball Shoes");
+
+        if (football.QuantityAvailableForPurchase < 1 || basketballShoes.QuantityAvailableForPurchase < 1)
+        {
+            throw new InvalidOperationException("There is not enough stock to create the seeded purchase.");
+        }
+
+        var purchase = new Purchase(customer, "Main Street 1","Barcelona", "Provinica de Barcelona","4111111111111111","123","12/30",purchaseDescription,isWrapped: true);
+
+        purchase.PurchaseItems.Add(new PurchaseItem(purchase, football));
+        purchase.PurchaseItems.Add(new PurchaseItem(purchase, basketballShoes));
+
+        purchase.TotalPrice = purchase.PurchaseItems.Sum(purchaseItem => purchaseItem.Price * purchaseItem.Quantity);
+
+        // Match the inventory effect of CreatePurchase: bought items are no longer in stock.
+        football.QuantityAvailableForPurchase -= 1;
+        basketballShoes.QuantityAvailableForPurchase -= 1;
+
+        dbContext.Purchases.Add(purchase);
+        dbContext.SaveChanges();
+    }
+
     private static void SeedGame(ApplicationDbContext dbContext)
     {
         var football = dbContext.Sports
