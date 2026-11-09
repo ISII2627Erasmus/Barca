@@ -33,8 +33,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
     }
 
     [HttpPost("[action]")]
-    public async Task<ActionResult<GetPurchaseDTO>> CreatePurchase(
-        [FromBody] PurchaseForCreateDTO dto)
+    public async Task<ActionResult<GetPurchaseDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
     {
         var itemIds = dto.PurchaseItems.Select(item => item.ItemId).ToList();
         if (itemIds.Count == 0 || itemIds.Distinct().Count() != itemIds.Count)

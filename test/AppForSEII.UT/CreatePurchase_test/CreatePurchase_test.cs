@@ -3,7 +3,7 @@ using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.PurchaseDTOs;
 using Microsoft.AspNetCore.Http;
 
-namespace AppForSEII.UT.PurchasesController_test.CreatePurchase_test;
+namespace AppForSEII.UT.CretePurchase_test.CreatePurchase_test;
 
 public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
 {
@@ -26,10 +26,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     public async Task WithDuplicateItems_ReturnsBadRequest()
     {
         var itemId = _fixture.FootballBoots.Id;
-        var result = await CreatePurchase(
-            _fixture.Customer.Id,
-            new PurchaseItemDTO(itemId, 1),
-            new PurchaseItemDTO(itemId, 2));
+        var result = await CreatePurchase(_fixture.Customer.Id, new PurchaseItemDTO(itemId, 1), new PurchaseItemDTO(itemId, 2));
 
         Assert.IsType<BadRequestObjectResult>(result.Result);
     }
@@ -37,9 +34,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     [Fact]
     public async Task WithoutUser_ReturnsUnauthorized()
     {
-        var result = await CreatePurchase(
-            null,
-            new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
+        var result = await CreatePurchase(null, new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
@@ -47,9 +42,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     [Fact]
     public async Task UserDoesNotExist_ReturnsUnauthorized()
     {
-        var result = await CreatePurchase(
-            "missing-user",
-            new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
+        var result = await CreatePurchase("missing-user", new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
         Assert.IsType<UnauthorizedResult>(result.Result);
     }
@@ -57,9 +50,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     [Fact]
     public async Task ItemDoesNotExist_ReturnsBadRequest()
     {
-        var result = await CreatePurchase(
-            _fixture.Customer.Id,
-            new PurchaseItemDTO(int.MaxValue, 1));
+        var result = await CreatePurchase(_fixture.Customer.Id, new PurchaseItemDTO(int.MaxValue, 1));
 
         Assert.IsType<BadRequestObjectResult>(result.Result);
     }
@@ -68,9 +59,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     public async Task NotEnoughStock_ReturnsConflictWithoutChangingStock()
     {
         var stockBefore = await GetStock();
-        var result = await CreatePurchase(
-            _fixture.Customer.Id,
-            new PurchaseItemDTO(_fixture.FootballBoots.Id, stockBefore + 1));
+        var result = await CreatePurchase(_fixture.Customer.Id, new PurchaseItemDTO(_fixture.FootballBoots.Id, stockBefore + 1));
 
         Assert.IsType<ConflictObjectResult>(result.Result);
         Assert.Equal(stockBefore, await GetStock());
@@ -80,31 +69,16 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
     public async Task SavesPurchaseAndReducesStock()
     {
         var stockBefore = await GetStock();
-        var result = await CreatePurchase(
-            _fixture.Customer.Id,
-            new PurchaseItemDTO(_fixture.FootballBoots.Id, 2));
+        var result = await CreatePurchase(_fixture.Customer.Id, new PurchaseItemDTO(_fixture.FootballBoots.Id, 2));
 
         var created = Assert.IsType<CreatedAtActionResult>(result.Result);
         var purchase = Assert.IsType<GetPurchaseDTO>(created.Value);
 
-        var expected = new GetPurchaseDTO(
-            purchase.Id,
-            purchase.PurchaseDate,
-            "Purchase test",
-            119.80m,
-            true,
+        var expected = new GetPurchaseDTO(purchase.Id, purchase.PurchaseDate, "Purchase test", 119.80m, true,
             new PurchaseUserDTO("Taylor", "Smith"),
             new List<PurchaseItemDetailDTO>
             {
-                new(
-                    _fixture.FootballBoots.Id,
-                    "Football Boots",
-                    "Nike",
-                    59.90m,
-                    21,
-                    Gender.Male,
-                    "42",
-                    2)
+                new(_fixture.FootballBoots.Id,"Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", 2)
             });
 
         Assert.Equal(expected, purchase);
@@ -119,16 +93,13 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
         var stockBefore = await GetStock();
         using (var context = _fixture.CreateContext())
         {
-            await context.Database.ExecuteSqlRawAsync(
-                "CREATE TRIGGER \"FailPurchaseInsert\" BEFORE INSERT ON \"Purchases\" " +
-                "BEGIN SELECT RAISE(ABORT, 'Simulated insert failure'); END;");
+            await context.Database.ExecuteSqlRawAsync("CREATE TRIGGER \"FailPurchaseInsert\" BEFORE INSERT ON \"Purchases\" " +
+                                                      "BEGIN SELECT RAISE(ABORT, 'Simulated insert failure'); END;");
         }
 
         try
         {
-            var result = await CreatePurchase(
-                _fixture.Customer.Id,
-                new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
+            var result = await CreatePurchase(_fixture.Customer.Id, new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
             Assert.IsType<ConflictObjectResult>(result.Result);
             Assert.Equal(stockBefore, await GetStock());
@@ -136,8 +107,7 @@ public class CreatePurchase_test : IClassFixture<Databasefixture4GetOprations>
         finally
         {
             using var context = _fixture.CreateContext();
-            await context.Database.ExecuteSqlRawAsync(
-                "DROP TRIGGER IF EXISTS \"FailPurchaseInsert\";");
+            await context.Database.ExecuteSqlRawAsync("DROP TRIGGER IF EXISTS \"FailPurchaseInsert\";");
         }
     }
 
