@@ -305,6 +305,59 @@ public static void SeedSports(ApplicationDbContext dbContext)
 
         dbContext.SaveChanges();
     }
+
+
+    private static void SeedPurchases(ApplicationDbContext dbContext)
+    {
+        const string customerEmail = "peter@alu.uclm.es";
+        const string purchaseDescription = "Seed purchase for GetPurchase";
+
+        var customer = dbContext.Users.SingleOrDefault(
+            user => user.Email == customerEmail)
+            ?? throw new InvalidOperationException(
+                $"Seed user {customerEmail} was not found.");
+
+        // Make startup seeding repeatable: don't add the same purchase again.
+        if (dbContext.Purchases.Any(purchase => purchase.UserId == customer.Id && purchase.PurchaseDescription == purchaseDescription))
+            {
+                return;
+            }
+
+            var football = dbContext.Items.SingleOrDefault(item => item.Name == "Football") ?? 
+            throw new InvalidOperationException("Seed item Football was not found.");
+
+            const int quantity = 2;
+
+            if (football.QuantityAvailableForPurchase < quantity)
+            {
+                throw new InvalidOperationException(
+                    "There is not enough Football stock for the seed purchase.");
+            }
+
+        var purchase = new Purchase(
+            customer,
+            "123 University Street",
+            "Albacete",
+            "Albacete",
+            "4111111111111111", // Test card number; do not use real card data.
+            "123",
+            "12/30",
+            purchaseDescription)
+        {
+            PurchaseDate = new DateTime(2026, 11, 9, 12, 0, 0, DateTimeKind.Utc)
+        };
+
+        purchase.PurchaseItems.Add(new PurchaseItem(purchase, football, quantity));
+
+        purchase.TotalPrice = purchase.PurchaseItems.Sum(purchaseItem => purchaseItem.Price * purchaseItem.Quantity);
+
+        // Match CreatePurchase's inventory behavior.
+        football.QuantityAvailableForPurchase -= quantity;
+
+        dbContext.Purchases.Add(purchase);
+        dbContext.SaveChanges();
+    }
+
     private static void SeedGame(ApplicationDbContext dbContext)
     {
         var football = dbContext.Sports

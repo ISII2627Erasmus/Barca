@@ -3,7 +3,7 @@ using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.PurchaseDTOs;
 using Microsoft.AspNetCore.Http;
 
-namespace AppForSEII.UT.PurchasesController_test.GetPurchase_test;
+namespace AppForSEII.UT.GetPurchase_test.GetPurchase_test;
 
 public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 {
@@ -63,9 +63,7 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 		Assert.Equal(expected, actual);
 	}
 	
-	private async Task<ActionResult<GetPurchaseDTO>> GetPurchase(
-		string? userId,
-		int purchaseId)
+	private async Task<ActionResult<GetPurchaseDTO>> GetPurchase(string? userId, int purchaseId)
 	{
 		using var context = _fixture.CreateContext();
 		var controller = new PurchasesController(context)
@@ -82,11 +80,8 @@ public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
 	private async Task<Purchase> SavePurchase()
 	{
 		using var context = _fixture.CreateContext(); // Creating data in class fixture
-		var user = await context.ApplicationUsers
-		.SingleAsync(user => user.Id == _fixture.Customer.Id);
-		var item = await context.Items
-		.Include(item => item.Sport)
-		.SingleAsync(item => item.Id == _fixture.FootballBoots.Id);
+		var user = await context.ApplicationUsers.SingleAsync(user => user.Id == _fixture.Customer.Id);
+		var item = await context.Items.Include(item => item.Sport).SingleAsync(item => item.Id == _fixture.FootballBoots.Id);
 		var purchase = _fixture.CreatePurchase(user, item, 2);
 		
 		context.Purchases.Add(purchase);

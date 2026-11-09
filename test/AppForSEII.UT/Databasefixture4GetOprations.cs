@@ -15,9 +15,7 @@ public sealed class Databasefixture4GetOprations : IDisposable
         _connection = new SqliteConnection("Filename=:memory:");
         _connection.Open();
 
-        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlite(_connection)
-            .Options;
+        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).Options;
 
         using var context = CreateContext();
         context.Database.EnsureCreated();
@@ -53,11 +51,7 @@ public sealed class Databasefixture4GetOprations : IDisposable
 
         context.Items.AddRange(FootballBoots, FootballShirt, BasketballShoes, outOfStockItem);
 
-        Customer = new ApplicationUser(
-            "purchase-user",
-            "Taylor",
-            "Smith",
-            "taylor@example.com")
+        Customer = new ApplicationUser("purchase-user", "Taylor", "Smith", "taylor@example.com")
         {
             BirthDate = new DateOnly(2000, 1, 1),
             Age = 26,
@@ -69,20 +63,9 @@ public sealed class Databasefixture4GetOprations : IDisposable
 
     public ApplicationDbContext CreateContext() => new(_contextOptions);
 
-    public Purchase CreatePurchase(
-        ApplicationUser user,
-        Item item,
-        int quantity = 1)
+    public Purchase CreatePurchase(ApplicationUser user, Item item, int quantity = 1)
     {
-        var purchase = new Purchase(
-            user,
-            "Main Street 1",
-            "Barcelona",
-            "Barcelona",
-            "4111111111111111",
-            "123",
-            "12/30",
-            "Fixture purchase");
+        var purchase = new Purchase(user, "Main Street 1", "Barcelona", "Barcelona", "4111111111111111", "123", "12/30", "Fixture purchase");
 
         purchase.PurchaseItems.Add(new PurchaseItem(purchase, item, quantity));
         purchase.TotalPrice = item.Price * quantity;
