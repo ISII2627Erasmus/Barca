@@ -143,12 +143,16 @@ namespace AppForSEII.API.Controllers
                     "A referee can only be selected once.");
             }
 
+            
+
             if (refereeIds.Count < game.Sport.NumberOfReferees)
             {
                 ModelState.AddModelError(
                     "RefereeAssignments",
                     $"This sport requires at least {game.Sport.NumberOfReferees} referees.");
             }
+
+            
 
             var referees = await _context.Referees
                 .Where(referee => refereeIds.Contains(referee.Id))
@@ -167,6 +171,13 @@ namespace AppForSEII.API.Controllers
                     "RefereeAssignments",
                     "All selected referees must be instructed in the game's sport.");
             }
+            
+            if (referees.Any(referee => referee.Rating < 1))
+            {
+                ModelState.AddModelError(
+                    "RefereeAssignments",
+                    "Error! One of the Referees has less than 1 of rating.");
+            }
 
             var busyRefereeIds = await _context.RefereeAssignments
                 .Where(assignment =>
@@ -180,6 +191,8 @@ namespace AppForSEII.API.Controllers
                     "RefereeAssignments",
                     "One or more selected referees are already assigned to a future game.");
             }
+
+            
 
             if (ModelState.ErrorCount > 0)
             {

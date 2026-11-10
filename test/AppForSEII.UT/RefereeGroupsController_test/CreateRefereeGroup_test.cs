@@ -22,6 +22,7 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
     private readonly Referee _busyReferee;
     private readonly Referee _basketballReferee;
     private readonly RefereeGroup _existingGroup;
+    private readonly Referee _lowRatedReferee;
 
     public CreateRefereeGroup_test()
     {
@@ -61,9 +62,9 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
         _busyReferee = NewReferee("ref-busy", "Jamie", "Busy", _football, 2, 4);
         _basketballReferee = NewReferee(
             "ref-basketball", "Casey", "Basketball", _basketball, 4, 5);
-
+        _lowRatedReferee = NewReferee("ref-unrated", "Simon", "Unrated", _football, 0, 2);
         _context.Referees.AddRange(
-            _alex, _sam, _busyReferee, _basketballReferee);
+            _alex, _sam, _busyReferee, _basketballReferee, _lowRatedReferee);
         _context.SaveChanges();
 
         _existingGroup = new RefereeGroup(
@@ -203,6 +204,15 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
                 new("ref-busy", "Assistant referee", "Supports the main referee")
             });
 
+        var lowRatedReferee = NewRequest (
+            GameId,
+            assignments: new List<RefereeAssignedToDTO>
+            {
+                new("ref-alex", "Main referee", "Leads the referee group"),
+                new("ref-unrated", "Assistant referee", "Supports the main referee")
+            });
+        
+
         return new List<object?[]>
         {
             new object?[] { nullAssignments, "Select at least one referee." },
@@ -211,7 +221,8 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
             new object?[] { tooFewReferees, "This sport requires at least 2 referees." },
             new object?[] { unknownReferee, "One or more selected referees do not exist." },
             new object?[] { wrongSport, "All selected referees must be instructed in the game's sport." },
-            new object?[] { busyReferee, "One or more selected referees are already assigned to a future game." }
+            new object?[] { busyReferee, "One or more selected referees are already assigned to a future game." },
+            new object?[] { lowRatedReferee, "Error! One of the Referees has less than 1 of rating." }
         };
     }
 
