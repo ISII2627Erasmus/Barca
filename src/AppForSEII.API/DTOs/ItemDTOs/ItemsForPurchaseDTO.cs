@@ -1,6 +1,6 @@
 using AppForSEII.API.Models;
 
-namespace AppForSEII.API.DTOs.PurchaseDTOs;
+namespace AppForSEII.API.DTOs.ItemDTOs;
 
 public class ItemsForPurchaseDTO
 {
@@ -66,24 +66,19 @@ public class SportForPurchaseDTO
     {
     }
 
-    public SportForPurchaseDTO(int id, string name)
+    public SportForPurchaseDTO(string name)
     {
-        Id = id;
         Name = name;
     }
-
-    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
     public override bool Equals(object? obj)
     {
-        return obj is SportForPurchaseDTO other &&
-               Id == other.Id &&
-               Name == other.Name;
+        return obj is SportForPurchaseDTO other && Name == other.Name;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, Name);
+        return HashCode.Combine(Name);
     }
 }
