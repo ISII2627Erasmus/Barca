@@ -2,9 +2,9 @@ using AppForSEII.API.Models;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
-public class GetPurchaseDTO
+public class PurchaseDetailDTO
 {
-    public GetPurchaseDTO(
+    public PurchaseDetailDTO(
         int id,
         DateTime purchaseDate,
         string? purchaseDescription,
@@ -13,6 +13,9 @@ public class GetPurchaseDTO
         PurchaseUserDTO user,
         List<PurchaseItemDetailDTO> purchaseItems)
     {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(purchaseItems);
+
         Id = id;
         PurchaseDate = purchaseDate;
         PurchaseDescription = purchaseDescription;
@@ -32,7 +35,7 @@ public class GetPurchaseDTO
 
     public override bool Equals(object? obj)
     {
-        return obj is GetPurchaseDTO other &&
+        return obj is PurchaseDetailDTO other &&
                Id == other.Id &&
                PurchaseDate == other.PurchaseDate &&
                PurchaseDescription == other.PurchaseDescription &&
@@ -104,6 +107,9 @@ public class PurchaseItemDetailDTO
         string? size,
         int quantity)
     {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(brand);
+
         ItemId = itemId;
         Name = name;
         Brand = brand;

@@ -14,6 +14,8 @@ builder.Services.AddControllers()
 // Add service for managing a sqlserver database that will be managed using ApplicationDBContext
 // the connection to the database was defined in appsettings
 
+
+/// Evnironment variable gives us ability to change database online
 string? connection2Database = Environment.GetEnvironmentVariable("DBConnection2Use");
 
 // If we are using the Production Environment, then the AZURE DB should be used,

@@ -1,6 +1,6 @@
 namespace AppForSEII.UT;
 
-public sealed class Databasefixture4GetOprations : IDisposable
+public sealed class DatabaseFixture4GetOperations : IDisposable
 {
     private readonly SqliteConnection _connection;
     private readonly DbContextOptions<ApplicationDbContext> _contextOptions;
@@ -9,13 +9,18 @@ public sealed class Databasefixture4GetOprations : IDisposable
     public Item FootballShirt { get; }
     public Item BasketballShoes { get; }
     public ApplicationUser Customer { get; }
+    public Purchase ExistingPurchase { get; }
 
-    public Databasefixture4GetOprations()
+    public DatabaseFixture4GetOperations()
     {
+        // Keep this connection open for the fixture lifetime so the SQLite in-memory
+        // database is shared by every context created for the tests in this class.
         _connection = new SqliteConnection("Filename=:memory:");
         _connection.Open();
 
-        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).Options;
+        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseSqlite(_connection)
+            .Options;
 
         using var context = CreateContext();
         context.Database.EnsureCreated();
@@ -59,19 +64,29 @@ public sealed class Databasefixture4GetOprations : IDisposable
         };
         context.ApplicationUsers.Add(Customer);
         context.SaveChanges();
+
+        ExistingPurchase = new Purchase(
+            Customer,
+            "Main Street 1",
+            "Barcelona",
+            "Barcelona",
+            "4111111111111111",
+            "123",
+            "12/30",
+            "Fixture purchase")
+        {
+            PurchaseDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
+        };
+        ExistingPurchase.PurchaseItems.Add(
+            new PurchaseItem(ExistingPurchase, FootballBoots, quantity: 2));
+        ExistingPurchase.TotalPrice = FootballBoots.Price * 2;
+        FootballBoots.QuantityAvailableForPurchase -= 2;
+
+        context.Purchases.Add(ExistingPurchase);
+        context.SaveChanges();
     }
 
     public ApplicationDbContext CreateContext() => new(_contextOptions);
-
-    public Purchase CreatePurchase(ApplicationUser user, Item item, int quantity = 1)
-    {
-        var purchase = new Purchase(user, "Main Street 1", "Barcelona", "Barcelona", "4111111111111111", "123", "12/30", "Fixture purchase");
-
-        purchase.PurchaseItems.Add(new PurchaseItem(purchase, item, quantity));
-        purchase.TotalPrice = item.Price * quantity;
-
-        return purchase;
-    }
 
     public void Dispose() => _connection.Dispose();
 }
