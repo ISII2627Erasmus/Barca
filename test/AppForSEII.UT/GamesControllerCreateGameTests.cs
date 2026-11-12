@@ -53,21 +53,17 @@ public class GamesControllerCreateGameTests
 
     private static GameForCreateDTO ValidDTO()
     {
-        return new GameForCreateDTO
-        {
-            Name = "Test Game",
-            Date = DateTime.Now.AddDays(7),
-            Place = "Albacete Stadium",
-            Description = "Test description",
-            GameInvitations = new List<GameInvitationDTO>
+        return new GameForCreateDTO(
+            "Test Game",
+            DateTime.Now.AddDays(7),
+            "Albacete Stadium",
+            "Test description",
+            new List<GameInvitationDTO>
             {
-                new GameInvitationDTO
-                {
-                    TeamId = 1,
-                    Message = "Please join our game!"
-                }
-            }
-        };
+                new GameInvitationDTO(
+                    1,
+                    "Please join our game!")
+            });
     }
 
     private static async Task<(ApplicationUser Captain, Sport Sport, Team Team)>
@@ -83,14 +79,13 @@ public class GamesControllerCreateGameTests
             "Captain",
             $"{captainId}@example.com");
 
-        var sport = new Sport
-        {
-            Name = sportName,
-            MinimumNumberOfPlayers = 2,
-            NumberOfReferees = 1,
-            Description = "Test sport",
-            BasicRules = "Test rules"
-        };
+        var sport = new Sport(
+            sportName,
+            2,
+            2,
+            1,
+            "Test sport",
+            "Test rules");
 
         var team = new Team(
             teamName,
@@ -109,12 +104,49 @@ public class GamesControllerCreateGameTests
         return (captain, sport, team);
     }
 
+    private static async Task<Team> SeedSecondTeam(
+        ApplicationDbContext context,
+        Sport sport,
+        string captainId = "second-captain",
+        string teamName = "TeamTwo")
+    {
+        var captain = new ApplicationUser(
+            captainId,
+            "Second",
+            "Captain",
+            $"{captainId}@example.com");
+
+        var team = new Team(
+            teamName,
+            10,
+            10,
+            40,
+            captain,
+            sport);
+
+        context.Users.Add(captain);
+        context.Teams.Add(team);
+
+        await context.SaveChangesAsync();
+
+        return team;
+    }
+
     private static void AssertBadRequest(
         IActionResult result,
         string expectedMessage)
     {
         var badRequest = Assert.IsType<BadRequestObjectResult>(result);
         Assert.Equal(expectedMessage, badRequest.Value);
+    }
+
+    private static void AssertNotBadRequest(IActionResult result)
+    {
+        if (result is BadRequestObjectResult badRequest)
+        {
+            throw new Exception(
+                $"BadRequest reason: {badRequest.Value}");
+        }
     }
 
     [Fact]
@@ -236,15 +268,15 @@ public class GamesControllerCreateGameTests
         var controller = CreateController(context);
         var data = await SeedTeam(context);
 
-        context.Games.Add(new Game
-        {
-            Name = "Test Game",
-            Date = DateTime.Now.AddDays(3),
-            Place = "Existing Stadium",
-            SportId = data.Sport.Id,
-            ResponsibleId = data.Captain.Id
-        });
+        var existingGame = new Game(
+            "Test Game",
+            DateTime.Now.AddDays(3),
+            "Existing Stadium",
+            null,
+            data.Sport,
+            data.Captain);
 
+        context.Games.Add(existingGame);
         await context.SaveChangesAsync();
 
         var dto = ValidDTO();
@@ -268,16 +300,12 @@ public class GamesControllerCreateGameTests
 
         dto.GameInvitations = new List<GameInvitationDTO>
         {
-            new GameInvitationDTO
-            {
-                TeamId = 1,
-                Message = "First invitation message"
-            },
-            new GameInvitationDTO
-            {
-                TeamId = 1,
-                Message = "Second invitation message"
-            }
+            new GameInvitationDTO(
+                1,
+                "First invitation message"),
+            new GameInvitationDTO(
+                1,
+                "Second invitation message")
         };
 
         var result = await controller.CreateGame(dto);
@@ -308,18 +336,40 @@ public class GamesControllerCreateGameTests
         using var context = CreateContext();
         var controller = CreateController(context);
 
-        var data = await SeedTeam(
+        var firstTeam = await SeedTeam(
             context,
             captainId: "another-user");
 
-        var dto = ValidDTO();
-        dto.GameInvitations[0].TeamId = data.Team.Id;
+        var secondTeam = await SeedSecondTeam(
+            context,
+            firstTeam.Sport,
+            captainId: "second-user");
+
+        var dto = new GameForCreateDTO(
+            "Test Game",
+            DateTime.Now.AddDays(7),
+            "Albacete Stadium",
+            "Test description",
+            new List<GameInvitationDTO>
+            {
+                new GameInvitationDTO(
+                    firstTeam.Team.Id,
+                    "Invitation for the first team"),
+                new GameInvitationDTO(
+                    secondTeam.Id,
+                    "Invitation for the second team")
+            });
 
         var result = await controller.CreateGame(dto);
 
+        AssertNotBadRequest(result);
+
         var forbidden = Assert.IsType<ObjectResult>(result);
 
-        Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
+        Assert.Equal(
+            StatusCodes.Status403Forbidden,
+            forbidden.StatusCode);
+
         Assert.Equal(
             "You must be the captain of at least one selected team.",
             forbidden.Value);
@@ -331,79 +381,129 @@ public class GamesControllerCreateGameTests
         using var context = CreateContext();
         var controller = CreateController(context);
 
-        var data = await SeedTeam(context);
+        var firstTeam = await SeedTeam(context);
 
-        var dto = ValidDTO();
-        dto.GameInvitations[0].TeamId = data.Team.Id;
+        var secondTeam = await SeedSecondTeam(
+            context,
+            firstTeam.Sport);
+
+        var dto = new GameForCreateDTO(
+            "Test Game",
+            DateTime.Now.AddDays(7),
+            "Albacete Stadium",
+            "Test description",
+            new List<GameInvitationDTO>
+            {
+                new GameInvitationDTO(
+                    firstTeam.Team.Id,
+                    "Invitation for the first team"),
+                new GameInvitationDTO(
+                    secondTeam.Id,
+                    "Invitation for the second team")
+            });
 
         var result = await controller.CreateGame(dto);
 
+        AssertNotBadRequest(result);
+
         var created = Assert.IsType<CreatedAtActionResult>(result);
 
-        Assert.Equal(StatusCodes.Status201Created, created.StatusCode);
-        Assert.Equal(nameof(GamesController.GetGame), created.ActionName);
+        Assert.Equal(
+            StatusCodes.Status201Created,
+            created.StatusCode);
+
+        Assert.Equal(
+            nameof(GamesController.GetGame),
+            created.ActionName);
 
         var response = Assert.IsType<GetGameDTO>(created.Value);
-
-        Assert.Equal(dto.Name, response.Name);
-        Assert.Equal(dto.Place, response.Place);
-        Assert.Equal(data.Sport.Name, response.SportName);
-        Assert.Single(response.InvitedTeams);
 
         var savedGame = await context.Games
             .Include(g => g.GameInvitations)
             .SingleAsync(g => g.Name == dto.Name);
 
+        var expectedResponse = new GetGameDTO
+        {
+            Id = savedGame.Id,
+            Name = dto.Name,
+            Date = dto.Date,
+            Place = dto.Place,
+            Description = dto.Description,
+            SportName = firstTeam.Sport.Name,
+            InvitedTeams = new List<InvitedTeamDTO>
+            {
+                new InvitedTeamDTO(
+                    firstTeam.Team.Id,
+                    firstTeam.Team.Name,
+                    firstTeam.Captain.Name ?? "",
+                    firstTeam.Captain.Surname ?? "",
+                    1,
+                    firstTeam.Team.MinAge,
+                    firstTeam.Team.MaxAge,
+                    firstTeam.Sport.Name,
+                    "Invitation for the first team"
+                ),
+                new InvitedTeamDTO(
+                    secondTeam.Id,
+                    secondTeam.Name,
+                    secondTeam.Captain.Name ?? "",
+                    secondTeam.Captain.Surname ?? "",
+                    1,
+                    secondTeam.MinAge,
+                    secondTeam.MaxAge,
+                    firstTeam.Sport.Name,
+                    "Invitation for the second team"
+                )
+            }
+        };
+
+        Assert.Equal(expectedResponse, response);
+
         Assert.Equal(UserId, savedGame.ResponsibleId);
-        Assert.Equal(data.Sport.Id, savedGame.SportId);
-        Assert.Single(savedGame.GameInvitations);
-        Assert.False(savedGame.GameInvitations[0].AcceptedGame);
+        Assert.Equal(firstTeam.Sport.Id, savedGame.SportId);
+        Assert.Equal(2, savedGame.GameInvitations.Count);
+        Assert.All(
+            savedGame.GameInvitations,
+            invitation => Assert.False(invitation.AcceptedGame));
     }
 
-
-    
-[Fact]
-public async Task CreateGame_WhenTeamsHaveDifferentSports_ReturnsBadRequest()
-{
-    // Arrange
-    using var context = CreateContext();
-    var controller = CreateController(context);
-
-    var firstTeam = await SeedTeam(
-        context,
-        captainId: UserId,
-        teamName: "TeamOne",
-        sportName: "Football");
-
-    var secondTeam = await SeedTeam(
-        context,
-        captainId: "test-user-2",
-        teamName: "TeamTwo",
-        sportName: "Basketball");
-
-    var dto = ValidDTO();
-
-    dto.GameInvitations = new List<GameInvitationDTO>
+    [Fact]
+    public async Task CreateGame_WhenTeamsHaveDifferentSports_ReturnsBadRequest()
     {
-        new GameInvitationDTO
-        {
-            TeamId = firstTeam.Team.Id,
-            Message = "Invitation for the first team"
-        },
-        new GameInvitationDTO
-        {
-            TeamId = secondTeam.Team.Id,
-            Message = "Invitation for the second team"
-        }
-    };
+        using var context = CreateContext();
+        var controller = CreateController(context);
 
-    // Act
-    var result = await controller.CreateGame(dto);
+        var firstTeam = await SeedTeam(
+            context,
+            captainId: UserId,
+            teamName: "TeamOne",
+            sportName: "Football");
 
-    // Assert
-    AssertBadRequest(
-        result,
-        "All selected teams must belong to the same sport.");
-}
+        var secondTeam = await SeedTeam(
+            context,
+            captainId: "test-user-2",
+            teamName: "TeamTwo",
+            sportName: "Basketball");
 
+        var dto = new GameForCreateDTO(
+            "Test Game",
+            DateTime.Now.AddDays(7),
+            "Albacete Stadium",
+            "Test description",
+            new List<GameInvitationDTO>
+            {
+                new GameInvitationDTO(
+                    firstTeam.Team.Id,
+                    "Invitation for the first team"),
+                new GameInvitationDTO(
+                    secondTeam.Team.Id,
+                    "Invitation for the second team")
+            });
+
+        var result = await controller.CreateGame(dto);
+
+        AssertBadRequest(
+            result,
+            "All selected teams must belong to the same sport.");
+    }
 }

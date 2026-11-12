@@ -4,6 +4,10 @@ namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
 public class PurchaseItemDTO
 {
+    public PurchaseItemDTO()
+    {
+    }
+
     public PurchaseItemDTO(int itemId, int quantity)
     {
         ItemId = itemId;

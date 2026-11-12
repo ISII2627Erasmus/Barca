@@ -1,5 +1,5 @@
 using AppForSEII.API.Data;
-using AppForSEII.API.DTOs.PurchaseDTOs;
+using AppForSEII.API.DTOs.ItemDTOs;
 using AppForSEII.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +14,9 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
     [ProducesResponseType(
         typeof(List<ItemsForPurchaseDTO>),
         StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(ValidationProblemDetails),
+        StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<ItemsForPurchaseDTO>>>
         GetItemsForPurchase(
             [FromQuery] Gender? gender,
@@ -44,7 +47,7 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
                 item.RecommendedAge,
                 item.Gender,
                 item.Size,
-                new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name)))
+                new SportForPurchaseDTO(item.Sport.Name)))
             .ToListAsync();
 
         return Ok(items);

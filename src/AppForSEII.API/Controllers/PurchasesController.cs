@@ -15,7 +15,10 @@ namespace AppForSEII.API.Controllers;
 public class PurchasesController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet("[action]")]
-    public async Task<ActionResult<GetPurchaseDTO>> GetPurchase([FromQuery] int id)
+    [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PurchaseDetailDTO>> GetPurchase([FromQuery] int id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
@@ -29,16 +32,31 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                 .ThenInclude(purchaseItem => purchaseItem.Item)
             .FirstOrDefaultAsync();
 
-        return purchase is null ? NotFound() : Ok(ToDTO(purchase));
+        return purchase is null ? NotFound() : Ok(ToPurchaseDetailDTO(purchase));
     }
 
     [HttpPost("[action]")]
-    public async Task<ActionResult<GetPurchaseDTO>> CreatePurchase(
-        [FromBody] PurchaseForCreateDTO dto)
+    [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<PurchaseDetailDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
     {
         var itemIds = dto.PurchaseItems.Select(item => item.ItemId).ToList();
-        if (itemIds.Count == 0 || itemIds.Distinct().Count() != itemIds.Count)
-            return BadRequest("Select at least one item, without duplicates.");
+        if (itemIds.Count == 0)
+        {
+            ModelState.AddModelError("PurchaseItems", "Select at least one item.");
+        }
+
+        if (itemIds.Distinct().Count() != itemIds.Count)
+        {
+            ModelState.AddModelError("PurchaseItems", "An item can only be selected once.");
+        }
+
+        if (ModelState.ErrorCount > 0)
+        {
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
@@ -49,6 +67,8 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         if (user is null)
             return Unauthorized();
 
+        // SaveChanges makes the writes atomic, but this transaction also covers the
+        // stock read/check so concurrent purchases cannot both spend the same stock.
         await using var transaction = await context.Database
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
@@ -56,7 +76,10 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             .Where(item => itemIds.Contains(item.Id))
             .ToListAsync();
         if (items.Count != itemIds.Count)
-            return BadRequest("A selected item does not exist.");
+        {
+            ModelState.AddModelError("PurchaseItems", "One or more selected items do not exist.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         foreach (var selectedItem in dto.PurchaseItems)
         {
@@ -97,10 +120,13 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return Conflict("The purchase could not be saved.");
         }
 
-        return CreatedAtAction(nameof(GetPurchase), new { id = purchase.Id }, ToDTO(purchase));
+        return CreatedAtAction(
+            nameof(GetPurchase),
+            new { id = purchase.Id },
+            ToPurchaseDetailDTO(purchase));
     }
 
-    private static GetPurchaseDTO ToDTO(Purchase purchase)
+    private static PurchaseDetailDTO ToPurchaseDetailDTO(Purchase purchase)
     {
         var items = purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDetailDTO(
             purchaseItem.Item.Id,
@@ -112,7 +138,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             purchaseItem.Item.Size,
             purchaseItem.Quantity)).ToList();
 
-        return new GetPurchaseDTO(
+        return new PurchaseDetailDTO(
             purchase.Id,
             purchase.PurchaseDate,
             purchase.PurchaseDescription,

@@ -185,15 +185,15 @@ namespace AppForSEII.API.Controllers
                 .ToListAsync();
 
             Team team = new Team
-            {
-                Name = teamForCreate.Name,
-                MaxMembers = teamForCreate.MaxMembers,
-                MinAge = teamForCreate.MinAge,
-                MaxAge = teamForCreate.MaxAge,
-                Captain = captain!,
-                Sport = sport,
-                Description = teamForCreate.Description,
-            };
+            (
+                teamForCreate.Name,
+                teamForCreate.MaxMembers,
+                teamForCreate.MinAge,
+                teamForCreate.MaxAge,
+                captain!,
+                sport,
+                teamForCreate.Description
+            ); 
 
             foreach (var invitation in teamForCreate.TeamInvitations)
             {
@@ -209,14 +209,11 @@ namespace AppForSEII.API.Controllers
                 }
                 else
                 {
-                    team.TeamInvitations.Add(new TeamInvitation
-                    {
-                        UserId = user.Id,
-                        User = user,
-                        Team = team,
-                        InvitationMessage = invitation.InvitationMessage,
-                        InvitationAccepted = false
-                    });
+                    team.TeamInvitations.Add(new TeamInvitation(
+                        user.Id,
+                        team.Id,
+                        invitation.InvitationMessage
+                    ));
                 }
             }
 
