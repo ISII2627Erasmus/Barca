@@ -1,13 +1,13 @@
 using AppForSEII.API.Controllers;
-using AppForSEII.API.DTOs.PurchaseDTOs;
+using AppForSEII.API.DTOs.ItemDTOs;
 
 namespace AppForSEII.UT.ItemsController_test;
 
-public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOprations>
+public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
 {
-    private readonly Databasefixture4GetOprations _fixture;
+    private readonly DatabaseFixture4GetOperations _fixture;
 
-    public GetItemsForPurchase_test(Databasefixture4GetOprations fixture)
+    public GetItemsForPurchase_test(DatabaseFixture4GetOperations fixture)
     {
         _fixture = fixture;
     }
@@ -15,97 +15,201 @@ public class GetItemsForPurchase_test : IClassFixture<Databasefixture4GetOpratio
     [Fact]
     public async Task FiltersByGenderAndSport()
     {
-        var items = await GetItems(Gender.Male, "Football");
+        // Arrange
+        var expected = new List<ItemsForPurchaseDTO>
+        {
+            new(
+                _fixture.FootballBoots.Id,
+                "Football Boots",
+                "Nike",
+                59.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Football"))
+        };
 
-        Assert.Equal(
-            new[] { ExpectedItem(_fixture.FootballBoots) },
-            items);
+        // Act
+        var result = await GetItems(Gender.Male, "Football");
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task FiltersByGenderOnly()
     {
-        var items = await GetItems(Gender.Female, null);
+        // Arrange
+        var expected = new List<ItemsForPurchaseDTO>
+        {
+            new(
+                _fixture.FootballShirt.Id,
+                "Football Shirt",
+                "Adidas",
+                39.90m,
+                18,
+                Gender.Female,
+                "M",
+                new SportForPurchaseDTO("Football"))
+        };
 
-        Assert.Equal(
-            new[] { ExpectedItem(_fixture.FootballShirt) },
-            items);
+        // Act
+        var result = await GetItems(Gender.Female, null);
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task FiltersBySportOnly()
     {
-        var items = await GetItems(null, "Football");
+        // Arrange
+        var expected = new List<ItemsForPurchaseDTO>
+        {
+            new(
+                _fixture.FootballShirt.Id,
+                "Football Shirt",
+                "Adidas",
+                39.90m,
+                18,
+                Gender.Female,
+                "M",
+                new SportForPurchaseDTO("Football")),
+            new(
+                _fixture.FootballBoots.Id,
+                "Football Boots",
+                "Nike",
+                59.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Football"))
+        };
 
-        Assert.Equal(
-            new[]
-            {
-                ExpectedItem(_fixture.FootballShirt),
-                ExpectedItem(_fixture.FootballBoots)
-            },
-            items);
+        // Act
+        var result = await GetItems(null, "Football");
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task ReturnsAllAvailableItemsWhenFiltersAreMissing()
     {
-        var items = await GetItems(null, null);
+        // Arrange
+        var expected = new List<ItemsForPurchaseDTO>
+        {
+            new(
+                _fixture.FootballShirt.Id,
+                "Football Shirt",
+                "Adidas",
+                39.90m,
+                18,
+                Gender.Female,
+                "M",
+                new SportForPurchaseDTO("Football")),
+            new(
+                _fixture.BasketballShoes.Id,
+                "Basketball Shoes",
+                "Puma",
+                79.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Basketball")),
+            new(
+                _fixture.FootballBoots.Id,
+                "Football Boots",
+                "Nike",
+                59.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Football"))
+        };
 
-        Assert.Equal(
-            new[]
-            {
-                ExpectedItem(_fixture.FootballShirt),
-                ExpectedItem(_fixture.BasketballShoes),
-                ExpectedItem(_fixture.FootballBoots)
-            },
-            items);
+        // Act
+        var result = await GetItems(null, null);
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task TreatsWhitespaceSportAsNoFilter()
     {
-        var items = await GetItems(null, "   ");
+        // Arrange
+        var expected = new List<ItemsForPurchaseDTO>
+        {
+            new(
+                _fixture.FootballShirt.Id,
+                "Football Shirt",
+                "Adidas",
+                39.90m,
+                18,
+                Gender.Female,
+                "M",
+                new SportForPurchaseDTO("Football")),
+            new(
+                _fixture.BasketballShoes.Id,
+                "Basketball Shoes",
+                "Puma",
+                79.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Basketball")),
+            new(
+                _fixture.FootballBoots.Id,
+                "Football Boots",
+                "Nike",
+                59.90m,
+                21,
+                Gender.Male,
+                "42",
+                new SportForPurchaseDTO("Football"))
+        };
 
-        Assert.Equal(
-            new[]
-            {
-                ExpectedItem(_fixture.FootballShirt),
-                ExpectedItem(_fixture.BasketballShoes),
-                ExpectedItem(_fixture.FootballBoots)
-            },
-            items);
+        // Act
+        var result = await GetItems(null, "   ");
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Equal(expected, actual);
     }
 
     [Fact]
     public async Task ReturnsEmptyListWhenNothingMatches()
     {
-        var items = await GetItems(Gender.Other, "Tennis");
+        // Arrange
+        var gender = Gender.Other;
+        var sportName = "Tennis";
 
-        Assert.Empty(items);
+        // Act
+        var result = await GetItems(gender, sportName);
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
+        Assert.Empty(actual);
     }
 
-    private async Task<List<ItemsForPurchaseDTO>> GetItems(
+    private async Task<ActionResult<List<ItemsForPurchaseDTO>>> GetItems(
         Gender? gender,
         string? sportName)
     {
         using var context = _fixture.CreateContext();
-        var result = await new ItemsController(context)
-            .GetItemsForPurchase(gender, sportName);
-        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var controller = new ItemsController(context);
 
-        return Assert.IsType<List<ItemsForPurchaseDTO>>(response.Value);
-    }
-
-    private static ItemsForPurchaseDTO ExpectedItem(Item item)
-    {
-        return new ItemsForPurchaseDTO(
-            item.Id,
-            item.Name,
-            item.Brand,
-            item.Price,
-            item.RecommendedAge,
-            item.Gender,
-            item.Size,
-            new SportForPurchaseDTO(item.Sport.Id, item.Sport.Name));
+        return await controller.GetItemsForPurchase(gender, sportName);
     }
 }

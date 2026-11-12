@@ -5,90 +5,103 @@ using Microsoft.AspNetCore.Http;
 
 namespace AppForSEII.UT.GetPurchase_test.GetPurchase_test;
 
-public class GetPurchase_test : IClassFixture<Databasefixture4GetOprations>
+public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
 {
-	private readonly Databasefixture4GetOprations _fixture;
-	
-	public GetPurchase_test(Databasefixture4GetOprations fixture)
-	{
-		_fixture = fixture;
-	}
-	
-	[Fact]
-	public async Task WithoutUser_ReturnsUnauthorized()
-	{
-		var result = await GetPurchase(null, 1); //null produces an empty principal, with no user ID claim.
-												 //String such as purchase-user produces a principal with a NameIdentifier claim containing that string.
-		
-		Assert.IsType<UnauthorizedResult>(result.Result);
-	}
-	
-	[Fact]
-	public async Task OwnedByAnotherUser_ReturnsNotFound()
-	{
-		var purchase = await SavePurchase();
-		var result = await GetPurchase("another-user", purchase.Id);
-		
-		Assert.IsType<NotFoundResult>(result.Result);
-	}
-	
-	[Fact]
-	public async Task ReturnsPurchaseForCurrentUser()
-	{
-		var purchase = await SavePurchase();
-		var result = await GetPurchase(_fixture.Customer.Id, purchase.Id);
-		
-		var response = Assert.IsType<OkObjectResult>(result.Result);
-		var actual = Assert.IsType<GetPurchaseDTO>(response.Value);
-		var expected = new GetPurchaseDTO(
-			purchase.Id,
-			purchase.PurchaseDate,
-			"Fixture purchase",
-			purchase.TotalPrice,
-			false,
-			new PurchaseUserDTO("Taylor", "Smith"),
-			new List<PurchaseItemDetailDTO>
-			{
-				new(
-					_fixture.FootballBoots.Id,
-					"Football Boots",
-					"Nike",
-					59.90m,
-					21,
-					Gender.Male,
-					"42",
-					2)
-			});
+    private readonly DatabaseFixture4GetOperations _fixture;
 
-		Assert.Equal(expected, actual);
-	}
-	
-	private async Task<ActionResult<GetPurchaseDTO>> GetPurchase(string? userId, int purchaseId)
-	{
-		using var context = _fixture.CreateContext();
-		var controller = new PurchasesController(context)
-		{
-			ControllerContext = new ControllerContext
-			{
-				HttpContext = new DefaultHttpContext { User = CreateUser(userId) }
-			}
-		};
-		
-		return await controller.GetPurchase(purchaseId);
-	}
-	
-	private async Task<Purchase> SavePurchase()
-	{
-		using var context = _fixture.CreateContext(); // Creating data in class fixture
-		var user = await context.ApplicationUsers.SingleAsync(user => user.Id == _fixture.Customer.Id);
-		var item = await context.Items.Include(item => item.Sport).SingleAsync(item => item.Id == _fixture.FootballBoots.Id);
-		var purchase = _fixture.CreatePurchase(user, item, 2);
-		
-		context.Purchases.Add(purchase);
-		await context.SaveChangesAsync();
-		return purchase;
-	}
-	
-	private static ClaimsPrincipal CreateUser(string? userId) => userId is null
-	? new ClaimsPrincipal(): new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.NameIdentifier, userId) }, "UnitTest"));
+    public GetPurchase_test(DatabaseFixture4GetOperations fixture)
+    {
+        _fixture = fixture;
+    }
+
+    [Fact]
+    public async Task WithoutUser_ReturnsUnauthorized()
+    {
+        // Arrange
+        using var context = _fixture.CreateContext();
+        var controller = CreateController(context, userId: null);
+
+        // Act
+        var result = await controller.GetPurchase(_fixture.ExistingPurchase.Id);
+
+        // Assert
+        Assert.IsType<UnauthorizedResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task OwnedByAnotherUser_ReturnsNotFound()
+    {
+        // Arrange
+        using var context = _fixture.CreateContext();
+        var controller = CreateController(context, "another-user");
+
+        // Act
+        var result = await controller.GetPurchase(_fixture.ExistingPurchase.Id);
+
+        // Assert
+        Assert.IsType<NotFoundResult>(result.Result);
+    }
+
+    [Fact]
+    public async Task ReturnsPurchaseForCurrentUser()
+    {
+        // Arrange
+        using var context = _fixture.CreateContext();
+        var controller = CreateController(context, _fixture.Customer.Id);
+        var expected = new PurchaseDetailDTO(
+            _fixture.ExistingPurchase.Id,
+            _fixture.ExistingPurchase.PurchaseDate,
+            "Fixture purchase",
+            119.80m,
+            false,
+            new PurchaseUserDTO("Taylor", "Smith"),
+            new List<PurchaseItemDetailDTO>
+            {
+                new(
+                    _fixture.FootballBoots.Id,
+                    "Football Boots",
+                    "Nike",
+                    59.90m,
+                    21,
+                    Gender.Male,
+                    "42",
+                    2)
+            });
+
+        // Act
+        var result = await controller.GetPurchase(_fixture.ExistingPurchase.Id);
+
+        // Assert
+        var response = Assert.IsType<OkObjectResult>(result.Result);
+        var actual = Assert.IsType<PurchaseDetailDTO>(response.Value);
+        Assert.Equal(expected, actual);
+    }
+
+    private static PurchasesController CreateController(
+        ApplicationDbContext context,
+        string? userId)
+    {
+        return new PurchasesController(context)
+        {
+            ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext
+                {
+                    User = CreateUser(userId)
+                }
+            }
+        };
+    }
+
+    private static ClaimsPrincipal CreateUser(string? userId)
+    {
+        if (userId is null)
+        {
+            return new ClaimsPrincipal();
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(
+            new[] { new Claim(ClaimTypes.NameIdentifier, userId) },
+            "UnitTest"));
+    }
 }
