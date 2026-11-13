@@ -55,7 +55,7 @@ public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
             119.80m,
             false,
             new PurchaseUserDTO("Taylor", "Smith"),
-            new List<PurchaseItemDetailDTO>
+            new List<PurchaseItemDTO>
             {
                 new(
                     _fixture.FootballBoots.Id,
@@ -65,6 +65,7 @@ public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
                     21,
                     Gender.Male,
                     "42",
+                    "Football",
                     2)
             });
 
