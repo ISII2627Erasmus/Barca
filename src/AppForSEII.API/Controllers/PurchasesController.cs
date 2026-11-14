@@ -14,7 +14,8 @@ namespace AppForSEII.API.Controllers;
 [Authorize]
 public class PurchasesController(ApplicationDbContext context) : ControllerBase
 {
-    [HttpGet("[action]")]
+    [HttpGet]
+    [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -27,15 +28,30 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         var purchase = await context.Purchases
             .AsNoTracking()
             .Where(purchase => purchase.Id == id && purchase.UserId == userId)
-            .Include(purchase => purchase.User)
-            .Include(purchase => purchase.PurchaseItems)
-                .ThenInclude(purchaseItem => purchaseItem.Item)
+            .Select(purchase => new PurchaseDetailDTO(
+                purchase.Id,
+                purchase.PurchaseDate,
+                purchase.PurchaseDescription,
+                purchase.TotalPrice,
+                purchase.IsWrapped,
+                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
+                    purchaseItem.Item.Id,
+                    purchaseItem.Item.Name,
+                    purchaseItem.Item.Brand,
+                    purchaseItem.Price,
+                    purchaseItem.Item.RecommendedAge,
+                    purchaseItem.Item.Gender,
+                    purchaseItem.Item.Size,
+                    purchaseItem.Item.Sport.Name,
+                    purchaseItem.Quantity)).ToList()))
             .FirstOrDefaultAsync();
 
-        return purchase is null ? NotFound() : Ok(ToPurchaseDetailDTO(purchase));
+        return purchase is null ? NotFound() : Ok(purchase);
     }
 
-    [HttpPost("[action]")]
+    [HttpPost]
+    [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -73,6 +89,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
         var items = await context.Items
+            .Include(item => item.Sport)
             .Where(item => itemIds.Contains(item.Id))
             .ToListAsync();
         if (items.Count != itemIds.Count)
@@ -123,28 +140,22 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         return CreatedAtAction(
             nameof(GetPurchase),
             new { id = purchase.Id },
-            ToPurchaseDetailDTO(purchase));
-    }
-
-    private static PurchaseDetailDTO ToPurchaseDetailDTO(Purchase purchase)
-    {
-        var items = purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDetailDTO(
-            purchaseItem.Item.Id,
-            purchaseItem.Item.Name,
-            purchaseItem.Item.Brand,
-            purchaseItem.Price,
-            purchaseItem.Item.RecommendedAge,
-            purchaseItem.Item.Gender,
-            purchaseItem.Item.Size,
-            purchaseItem.Quantity)).ToList();
-
-        return new PurchaseDetailDTO(
-            purchase.Id,
-            purchase.PurchaseDate,
-            purchase.PurchaseDescription,
-            purchase.TotalPrice,
-            purchase.IsWrapped,
-            new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
-            items);
+            new PurchaseDetailDTO(
+                purchase.Id,
+                purchase.PurchaseDate,
+                purchase.PurchaseDescription,
+                purchase.TotalPrice,
+                purchase.IsWrapped,
+                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
+                    purchaseItem.Item.Id,
+                    purchaseItem.Item.Name,
+                    purchaseItem.Item.Brand,
+                    purchaseItem.Price,
+                    purchaseItem.Item.RecommendedAge,
+                    purchaseItem.Item.Gender,
+                    purchaseItem.Item.Size,
+                    purchaseItem.Item.Sport.Name,
+                    purchaseItem.Quantity)).ToList()));
     }
 }

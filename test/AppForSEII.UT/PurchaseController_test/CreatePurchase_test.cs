@@ -128,7 +128,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         Assert.Equal(
             new[]
             {
-                new PurchaseItemDetailDTO(
+                new PurchaseItemDTO(
                     _fixture.FootballBoots.Id,
                     "Football Boots",
                     "Nike",
@@ -136,6 +136,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
                     21,
                     Gender.Male,
                     "42",
+                    "Football",
                     2)
             },
             purchase.PurchaseItems);

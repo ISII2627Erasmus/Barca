@@ -10,33 +10,17 @@ namespace AppForSEII.API.Controllers;
 [ApiController]
 public class ItemsController(ApplicationDbContext context) : ControllerBase
 {
-    [HttpGet("[action]")]
-    [ProducesResponseType(
-        typeof(List<ItemsForPurchaseDTO>),
-        StatusCodes.Status200OK)]
-    [ProducesResponseType(
-        typeof(ValidationProblemDetails),
-        StatusCodes.Status400BadRequest)]
+    [HttpGet]
+    [Route("[action]")]
+    [ProducesResponseType(typeof(List<ItemsForPurchaseDTO>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<List<ItemsForPurchaseDTO>>>
-        GetItemsForPurchase(
-            [FromQuery] Gender? gender,
-            [FromQuery] string? sportName)
+        GetItemsForPurchase([FromQuery] Gender? gender, [FromQuery] string? sportName)
     {
-        var query = context.Items
-            .AsNoTracking()
-            .Where(item => item.QuantityAvailableForPurchase > 0);
+        var sportNameFilter = string.IsNullOrWhiteSpace(sportName) ? null: sportName;
 
-        if (gender.HasValue)
-        {
-            query = query.Where(item => item.Gender == gender.Value);
-        }
-
-        if (!string.IsNullOrWhiteSpace(sportName))
-        {
-            query = query.Where(item => item.Sport.Name == sportName);
-        }
-
-        var items = await query
+        var items = await context.Items.AsNoTracking().Where(item => item.QuantityAvailableForPurchase > 0 && (!gender.HasValue || item.Gender == gender)
+            && (sportNameFilter == null || item.Sport.Name == sportNameFilter))
             .OrderBy(item => item.Gender)
             .ThenBy(item => item.Name)
             .Select(item => new ItemsForPurchaseDTO(

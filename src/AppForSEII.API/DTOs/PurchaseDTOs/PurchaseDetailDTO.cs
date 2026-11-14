@@ -2,7 +2,7 @@ using AppForSEII.API.Models;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
-public class PurchaseDetailDTO
+public class PurchaseDetailDTO : PurchaseForCreateDTO
 {
     public PurchaseDetailDTO(
         int id,
@@ -11,55 +11,34 @@ public class PurchaseDetailDTO
         decimal totalPrice,
         bool wrapped,
         PurchaseUserDTO user,
-        List<PurchaseItemDetailDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems) : base(purchaseDescription, wrapped, purchaseItems)
     {
         ArgumentNullException.ThrowIfNull(user);
-        ArgumentNullException.ThrowIfNull(purchaseItems);
 
         Id = id;
         PurchaseDate = purchaseDate;
-        PurchaseDescription = purchaseDescription;
         TotalPrice = totalPrice;
-        Wrapped = wrapped;
         User = user;
-        PurchaseItems = purchaseItems;
     }
 
     public int Id { get; set; }
     public DateTime PurchaseDate { get; set; }
-    public string? PurchaseDescription { get; set; }
     public decimal TotalPrice { get; set; }
-    public bool Wrapped { get; set; }
     public PurchaseUserDTO User { get; set; } = new();
-    public List<PurchaseItemDetailDTO> PurchaseItems { get; set; } = new();
 
     public override bool Equals(object? obj)
     {
         return obj is PurchaseDetailDTO other &&
+               base.Equals(other) &&
                Id == other.Id &&
                PurchaseDate == other.PurchaseDate &&
-               PurchaseDescription == other.PurchaseDescription &&
                TotalPrice == other.TotalPrice &&
-               Wrapped == other.Wrapped &&
-               User.Equals(other.User) &&
-               PurchaseItems.SequenceEqual(other.PurchaseItems);
+               User.Equals(other.User);
     }
 
     public override int GetHashCode()
     {
-        var hash = new HashCode();
-        hash.Add(Id);
-        hash.Add(PurchaseDate);
-        hash.Add(PurchaseDescription);
-        hash.Add(TotalPrice);
-        hash.Add(Wrapped);
-        hash.Add(User);
-        foreach (var item in PurchaseItems)
-        {
-            hash.Add(item);
-        }
-
-        return hash.ToHashCode();
+        return HashCode.Combine(base.GetHashCode(), Id, PurchaseDate, TotalPrice, User);
     }
 }
 
@@ -88,70 +67,5 @@ public class PurchaseUserDTO
     public override int GetHashCode()
     {
         return HashCode.Combine(Name, Surname);
-    }
-}
-
-public class PurchaseItemDetailDTO
-{
-    public PurchaseItemDetailDTO()
-    {
-    }
-
-    public PurchaseItemDetailDTO(
-        int itemId,
-        string name,
-        string brand,
-        decimal price,
-        int? recommendedAge,
-        Gender? gender,
-        string? size,
-        int quantity)
-    {
-        ArgumentNullException.ThrowIfNull(name);
-        ArgumentNullException.ThrowIfNull(brand);
-
-        ItemId = itemId;
-        Name = name;
-        Brand = brand;
-        Price = price;
-        RecommendedAge = recommendedAge;
-        Gender = gender;
-        Size = size;
-        Quantity = quantity;
-    }
-
-    public int ItemId { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string Brand { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-    public int? RecommendedAge { get; set; }
-    public Gender? Gender { get; set; }
-    public string? Size { get; set; }
-    public int Quantity { get; set; }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is PurchaseItemDetailDTO other &&
-               ItemId == other.ItemId &&
-               Name == other.Name &&
-               Brand == other.Brand &&
-               Price == other.Price &&
-               RecommendedAge == other.RecommendedAge &&
-               Gender == other.Gender &&
-               Size == other.Size &&
-               Quantity == other.Quantity;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(
-            ItemId,
-            Name,
-            Brand,
-            Price,
-            RecommendedAge,
-            Gender,
-            Size,
-            Quantity);
     }
 }
