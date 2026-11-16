@@ -1,0 +1,27 @@
+@* 1. Directives *@
+@page "/teams/listplayersforteams"
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@inject AppForSEIIAPIClient apiservice
+@*@attribute [Authorize]*@
+
+@* 2. Markup with C# expressions *@
+<button @onclick="@SearchPlayers">Search</button>
+
+@* 3. C# logic *@
+@code {
+    private ICollection<ApplicationUserForTeamDTO>? Players { get; set; } = new List<ApplicationUserForTeamDTO>();
+
+    protected async void SearchPlayers()
+    {
+        try
+        {
+            Players = await apiservice.GetUsersForTeamAsync(null, null, null, null);
+        }
+        catch (ApiException)
+        {
+            Players = new List<ApplicationUserForTeamDTO>();
+        }
+        StateHasChanged();
+    }
+}
