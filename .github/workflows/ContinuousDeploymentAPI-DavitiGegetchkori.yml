@@ -6,7 +6,7 @@ name: Build and deploy to Azure Web App - appforseii
 on:
   push:
     branches:
-      - 'DavitiGegetchkori-ContinuousDeployment' # Set a branch name to trigger deployment
+      - 'CI-DavitiGegetchkori' # Set a branch name to trigger deployment
 
   pull_request: 
     branches:
