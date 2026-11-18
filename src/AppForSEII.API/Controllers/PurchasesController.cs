@@ -14,8 +14,12 @@ namespace AppForSEII.API.Controllers;
 [Authorize]
 public class PurchasesController(ApplicationDbContext context) : ControllerBase
 {
-    [HttpGet("[action]")]
-    public async Task<ActionResult<GetPurchaseDTO>> GetPurchase([FromQuery] int id)
+    [HttpGet]
+    [Route("[action]")]
+    [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PurchaseDetailDTO>> GetPurchase([FromQuery] int id)
     {
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
@@ -24,20 +28,51 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         var purchase = await context.Purchases
             .AsNoTracking()
             .Where(purchase => purchase.Id == id && purchase.UserId == userId)
-            .Include(purchase => purchase.User)
-            .Include(purchase => purchase.PurchaseItems)
-                .ThenInclude(purchaseItem => purchaseItem.Item)
+            .Select(purchase => new PurchaseDetailDTO(
+                purchase.Id,
+                purchase.PurchaseDate,
+                purchase.PurchaseDescription,
+                purchase.TotalPrice,
+                purchase.IsWrapped,
+                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
+                    purchaseItem.Item.Id,
+                    purchaseItem.Item.Name,
+                    purchaseItem.Item.Brand,
+                    purchaseItem.Price,
+                    purchaseItem.Item.RecommendedAge,
+                    purchaseItem.Item.Gender,
+                    purchaseItem.Item.Size,
+                    purchaseItem.Item.Sport.Name,
+                    purchaseItem.Quantity)).ToList()))
             .FirstOrDefaultAsync();
 
-        return purchase is null ? NotFound() : Ok(ToDTO(purchase));
+        return purchase is null ? NotFound() : Ok(purchase);
     }
 
-    [HttpPost("[action]")]
-    public async Task<ActionResult<GetPurchaseDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
+    [HttpPost]
+    [Route("[action]")]
+    [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<PurchaseDetailDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
     {
         var itemIds = dto.PurchaseItems.Select(item => item.ItemId).ToList();
-        if (itemIds.Count == 0 || itemIds.Distinct().Count() != itemIds.Count)
-            return BadRequest("Select at least one item, without duplicates.");
+        if (itemIds.Count == 0)
+        {
+            ModelState.AddModelError("PurchaseItems", "Select at least one item.");
+        }
+
+        if (itemIds.Distinct().Count() != itemIds.Count)
+        {
+            ModelState.AddModelError("PurchaseItems", "An item can only be selected once.");
+        }
+
+        if (ModelState.ErrorCount > 0)
+        {
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
@@ -48,14 +83,20 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         if (user is null)
             return Unauthorized();
 
+        // SaveChanges makes the writes atomic, but this transaction also covers the
+        // stock read/check so concurrent purchases cannot both spend the same stock.
         await using var transaction = await context.Database
             .BeginTransactionAsync(IsolationLevel.Serializable);
 
         var items = await context.Items
+            .Include(item => item.Sport)
             .Where(item => itemIds.Contains(item.Id))
             .ToListAsync();
         if (items.Count != itemIds.Count)
-            return BadRequest("A selected item does not exist.");
+        {
+            ModelState.AddModelError("PurchaseItems", "One or more selected items do not exist.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         foreach (var selectedItem in dto.PurchaseItems)
         {
@@ -96,28 +137,25 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return Conflict("The purchase could not be saved.");
         }
 
-        return CreatedAtAction(nameof(GetPurchase), new { id = purchase.Id }, ToDTO(purchase));
-    }
-
-    private static GetPurchaseDTO ToDTO(Purchase purchase)
-    {
-        var items = purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDetailDTO(
-            purchaseItem.Item.Id,
-            purchaseItem.Item.Name,
-            purchaseItem.Item.Brand,
-            purchaseItem.Price,
-            purchaseItem.Item.RecommendedAge,
-            purchaseItem.Item.Gender,
-            purchaseItem.Item.Size,
-            purchaseItem.Quantity)).ToList();
-
-        return new GetPurchaseDTO(
-            purchase.Id,
-            purchase.PurchaseDate,
-            purchase.PurchaseDescription,
-            purchase.TotalPrice,
-            purchase.IsWrapped,
-            new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
-            items);
+        return CreatedAtAction(
+            nameof(GetPurchase),
+            new { id = purchase.Id },
+            new PurchaseDetailDTO(
+                purchase.Id,
+                purchase.PurchaseDate,
+                purchase.PurchaseDescription,
+                purchase.TotalPrice,
+                purchase.IsWrapped,
+                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
+                    purchaseItem.Item.Id,
+                    purchaseItem.Item.Name,
+                    purchaseItem.Item.Brand,
+                    purchaseItem.Price,
+                    purchaseItem.Item.RecommendedAge,
+                    purchaseItem.Item.Gender,
+                    purchaseItem.Item.Size,
+                    purchaseItem.Item.Sport.Name,
+                    purchaseItem.Quantity)).ToList()));
     }
 }
