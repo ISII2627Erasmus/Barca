@@ -119,12 +119,12 @@ namespace AppForSEII.Web.API
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(int? gameId, int? minYearsRefereeing);
+        System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(string sportName, int? minYearsRefereeing);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(int? gameId, int? minYearsRefereeing, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(string sportName, int? minYearsRefereeing, System.Threading.CancellationToken cancellationToken);
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -1236,15 +1236,15 @@ namespace AppForSEII.Web.API
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(int? gameId, int? minYearsRefereeing)
+        public virtual System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(string sportName, int? minYearsRefereeing)
         {
-            return GetRefereesForRefereeGroupAsync(gameId, minYearsRefereeing, System.Threading.CancellationToken.None);
+            return GetRefereesForRefereeGroupAsync(sportName, minYearsRefereeing, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(int? gameId, int? minYearsRefereeing, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<RefereesForRefereeGroupDTO> GetRefereesForRefereeGroupAsync(string sportName, int? minYearsRefereeing, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1260,9 +1260,9 @@ namespace AppForSEII.Web.API
                     // Operation Path: "api/Referees/GetRefereesForRefereeGroup"
                     urlBuilder_.Append("api/Referees/GetRefereesForRefereeGroup");
                     urlBuilder_.Append('?');
-                    if (gameId != null)
+                    if (sportName != null)
                     {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("gameId")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(gameId, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                        urlBuilder_.Append(System.Uri.EscapeDataString("sportName")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(sportName, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     if (minYearsRefereeing != null)
                     {
