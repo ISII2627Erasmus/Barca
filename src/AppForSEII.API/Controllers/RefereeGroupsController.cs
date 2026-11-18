@@ -168,6 +168,13 @@ namespace AppForSEII.API.Controllers
                     "All selected referees must be instructed in the game's sport.");
             }
 
+            if (referees.Any(referee => referee.Rating < 1))
+            {
+                ModelState.AddModelError(
+                    "RefereeAssignments",
+                    "Error! One of the Referees has less than 1 of rating.");
+            }
+
             var busyRefereeIds = await _context.RefereeAssignments
                 .Where(assignment =>
                     assignment.RefereeGroup.Game.Date > DateTime.Now)
