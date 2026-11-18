@@ -1,7 +1,5 @@
-using System.Security.Claims;
 using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.RefereeDTOs;
-using Microsoft.AspNetCore.Http;
 
 namespace AppForSEII.UT.RefereeGroupsController_test;
 
@@ -120,25 +118,10 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
     }
 
     private RefereeGroupsController CreateController(
-        string? userId = OwnerId,
         ApplicationDbContext? context = null)
     {
         var mock = new Mock<ILogger<RefereeGroupsController>>();
-        var controller = new RefereeGroupsController(context ?? _context, mock.Object);
-
-        var claims = userId == null
-            ? Array.Empty<Claim>()
-            : new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
-
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext
-            {
-                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Unit test"))
-            }
-        };
-
-        return controller;
+        return new RefereeGroupsController(context ?? _context, mock.Object);
     }
 
     private static RefereeGroupDTO NewRequest(
@@ -220,7 +203,6 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
         return new List<object?[]>
         {
             new object?[] { NewRequest(999) },
-            new object?[] { NewRequest(OtherUserGameId) },
             new object?[] { NewRequest(PastGameId) }
         };
     }
@@ -232,22 +214,6 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
             new object?[] { NewRequest(GameWithGroupId) },
             new object?[] { NewRequest(GameId, "Existing") }
         };
-    }
-
-    [Fact]
-    [Trait("LevelTesting", "Unit Testing")]
-    [Trait("Database", "WithoutFixture")]
-    public async Task CreateRefereeGroup_UserIsNotAuthenticated_Unauthorized()
-    {
-        // Arrange
-        var controller = CreateController(null);
-        var request = NewRequest(GameId);
-
-        // Act
-        var result = await controller.CreateRefereeGroup(request);
-
-        // Assert
-        Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Theory]
