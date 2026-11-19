@@ -1,7 +1,5 @@
-using System.Security.Claims;
 using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.PurchaseDTOs;
-using Microsoft.AspNetCore.Http;
 
 namespace AppForSEII.UT.CretePurchase_test.CreatePurchase_test;
 
@@ -44,7 +42,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
     {
         // Arrange
         using var context = _fixture.CreateContext();
-        var controller = CreateController(context, _fixture.Customer.Id);
+        var controller = new PurchasesController(context);
 
         // Act
         var result = await controller.CreatePurchase(request);
@@ -56,33 +54,20 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
     }
 
     [Fact]
-    public async Task WithoutUser_ReturnsUnauthorized()
+    public async Task UnknownCustomerUserName_ReturnsBadRequest()
     {
         // Arrange
         using var context = _fixture.CreateContext();
-        var controller = CreateController(context, userId: null);
-        var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
+        var controller = new PurchasesController(context);
+        var request = CreateRequest(
+            "missing-user",
+            new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
         // Act
         var result = await controller.CreatePurchase(request);
 
         // Assert
-        Assert.IsType<UnauthorizedResult>(result.Result);
-    }
-
-    [Fact]
-    public async Task UserDoesNotExist_ReturnsUnauthorized()
-    {
-        // Arrange
-        using var context = _fixture.CreateContext();
-        var controller = CreateController(context, "missing-user");
-        var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
-
-        // Act
-        var result = await controller.CreatePurchase(request);
-
-        // Assert
-        Assert.IsType<UnauthorizedResult>(result.Result);
+        Assert.IsType<BadRequestObjectResult>(result.Result);
     }
 
     [Fact]
@@ -91,7 +76,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         // Arrange
         var stockBefore = await GetStock();
         using var context = _fixture.CreateContext();
-        var controller = CreateController(context, _fixture.Customer.Id);
+        var controller = new PurchasesController(context);
         var request = CreateRequest(
             new PurchaseItemDTO(_fixture.FootballBoots.Id, stockBefore + 1));
 
@@ -109,7 +94,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         // Arrange
         var stockBefore = await GetStock();
         using var context = _fixture.CreateContext();
-        var controller = CreateController(context, _fixture.Customer.Id);
+        var controller = new PurchasesController(context);
         var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 2));
 
         // Act
@@ -124,6 +109,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         Assert.Equal("Purchase test", purchase.PurchaseDescription);
         Assert.Equal(119.80m, purchase.TotalPrice);
         Assert.True(purchase.Wrapped);
+        Assert.Equal("taylor@example.com", purchase.CustomerUserName);
         Assert.Equal(new PurchaseUserDTO("Taylor", "Smith"), purchase.User);
         Assert.Equal(
             new[]
@@ -166,7 +152,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         }
 
         using var purchaseContext = _fixture.CreateContext();
-        var controller = CreateController(purchaseContext, _fixture.Customer.Id);
+        var controller = new PurchasesController(purchaseContext);
         var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
         try
@@ -188,6 +174,13 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
 
     private static PurchaseForCreateDTO CreateRequest(params PurchaseItemDTO[] items)
     {
+        return CreateRequest("taylor@example.com", items);
+    }
+
+    private static PurchaseForCreateDTO CreateRequest(
+        string customerUserName,
+        params PurchaseItemDTO[] items)
+    {
         return new PurchaseForCreateDTO(
             "Main Street 1",
             "Barcelona",
@@ -197,25 +190,8 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
             "12/30",
             "Purchase test",
             true,
-            items.ToList());
-    }
-
-    private static PurchasesController CreateController(
-        ApplicationDbContext context,
-        string? userId)
-    {
-        // Direct controller calls bypass authentication middleware, so tests set the
-        // NameIdentifier claim that middleware normally places on HttpContext.User.
-        return new PurchasesController(context)
-        {
-            ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext
-                {
-                    User = CreateUser(userId)
-                }
-            }
-        };
+            items.ToList(),
+            customerUserName);
     }
 
     private async Task<int> GetStock()
@@ -227,15 +203,4 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
             .SingleAsync();
     }
 
-    private static ClaimsPrincipal CreateUser(string? userId)
-    {
-        if (userId is null)
-        {
-            return new ClaimsPrincipal();
-        }
-
-        return new ClaimsPrincipal(new ClaimsIdentity(
-            new[] { new Claim(ClaimTypes.NameIdentifier, userId) },
-            "UnitTest"));
-    }
 }

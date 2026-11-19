@@ -1,9 +1,6 @@
-using System.Data;
-using System.Security.Claims;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.PurchaseDTOs;
 using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,23 +8,17 @@ namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
 public class PurchasesController(ApplicationDbContext context) : ControllerBase
 {
     [HttpGet]
     [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PurchaseDetailDTO>> GetPurchase([FromQuery] int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
         var purchase = await context.Purchases
             .AsNoTracking()
-            .Where(purchase => purchase.Id == id && purchase.UserId == userId)
+            .Where(purchase => purchase.Id == id)
             .Select(purchase => new PurchaseDetailDTO(
                 purchase.Id,
                 purchase.PurchaseDate,
@@ -44,7 +35,8 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                     purchaseItem.Item.Gender,
                     purchaseItem.Item.Size,
                     purchaseItem.Item.Sport.Name,
-                    purchaseItem.Quantity)).ToList()))
+                    purchaseItem.Quantity)).ToList(),
+                purchase.User.UserName!))
             .FirstOrDefaultAsync();
 
         return purchase is null ? NotFound() : Ok(purchase);
@@ -54,7 +46,6 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
     [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PurchaseDetailDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
     {
@@ -74,19 +65,19 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return BadRequest(new ValidationProblemDetails(ModelState));
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
+        if (string.IsNullOrWhiteSpace(dto.CustomerUserName))
+        {
+            ModelState.AddModelError(nameof(dto.CustomerUserName), "Customer username is required.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         var user = await context.ApplicationUsers
-            .FirstOrDefaultAsync(user => user.Id == userId);
+            .FirstOrDefaultAsync(user => user.UserName == dto.CustomerUserName);
         if (user is null)
-            return Unauthorized();
-
-        // SaveChanges makes the writes atomic, but this transaction also covers the
-        // stock read/check so concurrent purchases cannot both spend the same stock.
-        await using var transaction = await context.Database
-            .BeginTransactionAsync(IsolationLevel.Serializable);
+        {
+            ModelState.AddModelError(nameof(dto.CustomerUserName), "The customer username was not found.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
         var items = await context.Items
             .Include(item => item.Sport)
@@ -129,11 +120,9 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         try
         {
             await context.SaveChangesAsync();
-            await transaction.CommitAsync();
         }
         catch (DbUpdateException)
         {
-            await transaction.RollbackAsync();
             return Conflict("The purchase could not be saved.");
         }
 
@@ -156,6 +145,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                     purchaseItem.Item.Gender,
                     purchaseItem.Item.Size,
                     purchaseItem.Item.Sport.Name,
-                    purchaseItem.Quantity)).ToList()));
+                    purchaseItem.Quantity)).ToList(),
+                purchase.User.UserName!));
     }
 }

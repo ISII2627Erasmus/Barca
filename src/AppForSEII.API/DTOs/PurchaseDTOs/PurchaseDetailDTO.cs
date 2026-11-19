@@ -11,7 +11,8 @@ public class PurchaseDetailDTO : PurchaseForCreateDTO
         decimal totalPrice,
         bool wrapped,
         PurchaseUserDTO user,
-        List<PurchaseItemDTO> purchaseItems) : base(purchaseDescription, wrapped, purchaseItems)
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName) : base(purchaseDescription, wrapped, purchaseItems, customerUserName)
     {
         ArgumentNullException.ThrowIfNull(user);
 
