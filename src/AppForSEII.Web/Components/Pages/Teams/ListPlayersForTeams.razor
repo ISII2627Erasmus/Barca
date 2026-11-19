@@ -5,18 +5,81 @@
 @inject AppForSEIIAPIClient apiservice
 @*@attribute [Authorize]*@
 
-@* 2. Markup with C# expressions *@
-<button @onclick="@SearchPlayers">Search</button>
+<PageTitle>Select Teammates</PageTitle>
 
-@* 3. C# logic *@
+<div class = "container">
+    @* 1. header *@
+    <h3>Select Teammates for your team</h3>
+
+    @* 2. Filters *@
+    <div class ="row mb-3">
+        <div class ="cold-md-3">
+            <label for = "sportName">Sport</label>
+            <input class = "form-control" id = "sportName" @bind= "sportName" />
+        </div>
+        <div class="col-md-2">
+            <label for="skill">Min. skill</label>
+            <input class="form-control" type="number" id="skill" @bind="skill" />
+        </div>
+        <div class="col-md-2">
+            <label for="minAge">Min. age</label>
+            <input class="form-control" type="number" id="minAge" @bind="minAge" />
+        </div>
+        <div class="col-md-2">
+            <label for="maxAge">Max. age</label>
+            <input class="form-control" type="number" id="maxAge" @bind="maxAge" />
+        </div>
+        <div class="col-md-3 d-flex align-items-end">
+            <button class="btn btn-primary" id="searchPlayers" @onclick="SearchPlayers">Search</button>
+        </div>
+    </div>  
+
+
+    @* 3. Results *@
+    @if (Players == null || !Players.Any())
+    {
+        <div class="alert alert-warning" id="noPlayers">There are no players available.</div>
+    }
+    else
+    {
+        <table class="table table-striped" id="TableOfPlayers">
+            <thead>
+                <tr><th>Name</th><th>Surname</th><th>Age</th><th>Sports (skill)</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Players)
+                {
+                    <tr>
+                        <td>@p.Name</td>
+                        <td>@p.Surname</td>
+                        <td>@p.Age</td>
+                        <td>@string.Join(", ", p.Sports.Select(s => $"{s.SportName} ({s.Skill})"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@* 4. C# logic *@
 @code {
     private ICollection<ApplicationUserForTeamDTO>? Players { get; set; } = new List<ApplicationUserForTeamDTO>();
+
+    private string? sportName;
+    private int? skill;
+    private int? minAge;
+    private int? maxAge;
+
+    protected override async Task OnInitializedAsync()
+    {
+        SearchPlayers();
+    }
 
     protected async void SearchPlayers()
     {
         try
         {
-            Players = await apiservice.GetUsersForTeamAsync(null, null, null, null);
+            Players = await apiservice.GetUsersForTeamAsync(sportName, skill, minAge, maxAge);
         }
         catch (ApiException)
         {
