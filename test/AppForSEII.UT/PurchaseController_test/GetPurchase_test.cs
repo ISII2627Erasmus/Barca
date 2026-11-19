@@ -1,5 +1,6 @@
 using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.PurchaseDTOs;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AppForSEII.UT.GetPurchase_test.GetPurchase_test;
 
@@ -17,7 +18,7 @@ public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
     {
         // Arrange
         using var context = _fixture.CreateContext();
-        var controller = new PurchasesController(context);
+        var controller = new PurchasesController(context, NullLogger<PurchasesController>.Instance);
         var expected = new PurchaseDetailDTO(
             _fixture.ExistingPurchase.Id,
             _fixture.ExistingPurchase.PurchaseDate,

@@ -3,20 +3,32 @@ using AppForSEII.API.DTOs.PurchaseDTOs;
 using AppForSEII.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class PurchasesController(ApplicationDbContext context) : ControllerBase
+public class PurchasesController : ControllerBase
 {
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<PurchasesController> _logger;
+
+    public PurchasesController(
+        ApplicationDbContext context,
+        ILogger<PurchasesController> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
     [HttpGet]
     [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PurchaseDetailDTO>> GetPurchase([FromQuery] int id)
     {
-        var purchase = await context.Purchases
+        var purchase = await _context.Purchases
             .AsNoTracking()
             .Where(purchase => purchase.Id == id)
             .Select(purchase => new PurchaseDetailDTO(
@@ -39,7 +51,13 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                 purchase.User.UserName!))
             .FirstOrDefaultAsync();
 
-        return purchase is null ? NotFound() : Ok(purchase);
+        if (purchase is null)
+        {
+            _logger.LogWarning("Purchase with ID {PurchaseId} was not found.", id);
+            return NotFound();
+        }
+
+        return Ok(purchase);
     }
 
     [HttpPost]
@@ -71,7 +89,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return BadRequest(new ValidationProblemDetails(ModelState));
         }
 
-        var user = await context.ApplicationUsers
+        var user = await _context.ApplicationUsers
             .FirstOrDefaultAsync(user => user.UserName == dto.CustomerUserName);
         if (user is null)
         {
@@ -79,7 +97,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return BadRequest(new ValidationProblemDetails(ModelState));
         }
 
-        var items = await context.Items
+        var items = await _context.Items
             .Include(item => item.Sport)
             .Where(item => itemIds.Contains(item.Id))
             .ToListAsync();
@@ -115,14 +133,15 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         }
 
         purchase.TotalPrice = purchase.PurchaseItems.Sum(item => item.Price * item.Quantity);
-        context.Purchases.Add(purchase);
+        _context.Purchases.Add(purchase);
 
         try
         {
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception)
         {
+            _logger.LogError(exception, "Failed to save purchase for customer {CustomerUserName}.", user.UserName);
             return Conflict("The purchase could not be saved.");
         }
 

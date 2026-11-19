@@ -1,5 +1,6 @@
 using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.PurchaseDTOs;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AppForSEII.UT.CretePurchase_test.CreatePurchase_test;
 
@@ -42,7 +43,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
     {
         // Arrange
         using var context = _fixture.CreateContext();
-        var controller = new PurchasesController(context);
+        var controller = new PurchasesController(context, NullLogger<PurchasesController>.Instance);
 
         // Act
         var result = await controller.CreatePurchase(request);
@@ -58,7 +59,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
     {
         // Arrange
         using var context = _fixture.CreateContext();
-        var controller = new PurchasesController(context);
+        var controller = new PurchasesController(context, NullLogger<PurchasesController>.Instance);
         var request = CreateRequest(
             "missing-user",
             new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
@@ -76,7 +77,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         // Arrange
         var stockBefore = await GetStock();
         using var context = _fixture.CreateContext();
-        var controller = new PurchasesController(context);
+        var controller = new PurchasesController(context, NullLogger<PurchasesController>.Instance);
         var request = CreateRequest(
             new PurchaseItemDTO(_fixture.FootballBoots.Id, stockBefore + 1));
 
@@ -94,7 +95,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         // Arrange
         var stockBefore = await GetStock();
         using var context = _fixture.CreateContext();
-        var controller = new PurchasesController(context);
+        var controller = new PurchasesController(context, NullLogger<PurchasesController>.Instance);
         var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 2));
 
         // Act
@@ -152,7 +153,7 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
         }
 
         using var purchaseContext = _fixture.CreateContext();
-        var controller = new PurchasesController(purchaseContext);
+        var controller = new PurchasesController(purchaseContext, NullLogger<PurchasesController>.Instance);
         var request = CreateRequest(new PurchaseItemDTO(_fixture.FootballBoots.Id, 1));
 
         try
