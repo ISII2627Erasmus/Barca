@@ -12,8 +12,18 @@
     <h3>Select Teammates for your team</h3>
 
     @* 2. Filters *@
+    <div class ="mb-2">
+        <button class ="btn btn-sm rounded-pill me-1 @(sportName == null ? "btn-primary" : "btn-outline-secondary")"
+                id="sport_All" @onclick="@(() => SelectSport(null))">All</button>
+        @foreach (var sport in allSports)
+        {
+            <button class="btn btn-sm rounded-pill me-1 @(sportName == sport ? "btn-primary" : "btn-outline-secondary")"
+                    id="sport_@sport" @onclick="@(() => SelectSport(sport))">@sport</button>
+        }
+    </div>
+
     <div class ="row mb-3">
-        <div class ="cold-md-3">
+        <div class ="col-md-3">
             <label for = "sportName">Sport</label>
             <input class = "form-control" id = "sportName" @bind= "sportName" />
         </div>
@@ -64,6 +74,7 @@
 @* 4. C# logic *@
 @code {
     private ICollection<ApplicationUserForTeamDTO>? Players { get; set; } = new List<ApplicationUserForTeamDTO>();
+    private List<string> allSports = new List<string>();
 
     private string? sportName;
     private int? skill;
@@ -72,10 +83,15 @@
 
     protected override async Task OnInitializedAsync()
     {
-        SearchPlayers();
+        await LoadPlayers();
+
+        allSports = Players!
+                    .SelectMany(p => p.Sports)
+                    .Select(s => s.SportName)
+                    .Distinct().OrderBy(s => s).ToList();
     }
 
-    protected async void SearchPlayers()
+    protected async Task LoadPlayers()
     {
         try
         {
@@ -86,5 +102,17 @@
             Players = new List<ApplicationUserForTeamDTO>();
         }
         StateHasChanged();
+    }
+
+    protected async void SearchPlayers()
+    {
+        await LoadPlayers();
+        StateHasChanged();
+    }
+
+    private void SelectSport(string? sport)
+    {
+        sportName = sport;
+        SearchPlayers();
     }
 }
