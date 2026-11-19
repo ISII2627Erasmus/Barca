@@ -5,7 +5,7 @@
 @inject AppForSEIIAPIClient apiservice
 @inject TeamStateContainer teamState
 @inject NavigationManager navigation
-@*@attribute [Authorize]*@
+@attribute [Authorize]
 
 <PageTitle>Select Teammates</PageTitle>
 
@@ -112,7 +112,7 @@
     </div>
 </div>
 
-@* 4. C# logic *@
+@* 5. C# logic *@
 @code {
     private ICollection<ApplicationUserForTeamDTO>? Players { get; set; } = new List<ApplicationUserForTeamDTO>();
     private List<string> allSports = new List<string>();

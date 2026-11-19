@@ -1,0 +1,50 @@
+@page "/teams/createteam"
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@inject AppForSEIIAPIClient apiservice
+@inject TeamStateContainer teamState
+@inject NavigationManager navigation
+@inject AuthenticationStateProvider authProvider
+@attribute [Authorize]
+
+<PageTitle>Create Team</PageTitle>
+
+<div class="container">
+    @* 1. Header *@
+    <h3>Create your team</h3>
+
+    <div class="row">
+        @* 2. Selected players (UC step 4) *@
+        <div class="col-md-4">
+            <h5>Selected players (@team.TeamInvitations.Count)</h5>
+            @if (!team.TeamInvitations.Any())
+            {
+                <div class="alert alert-warning" id="noSelectedPlayers">
+                    You have not selected any players.
+                </div>
+            }
+            @foreach (var invitation in team.TeamInvitations)
+            {
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <h6 class="fw-bold mb-0">@invitation.Name @invitation.Surname</h6>
+                        <small class="text-muted">Age @invitation.Age</small>
+                    </div>
+                </div>
+            }
+            <button class="btn btn-outline-secondary mt-2" id="backToPlayers" @onclick="BackToPlayers">
+                Modify players
+            </button>
+        </div>
+
+        @* 3. Team data form (next step) *@
+        <div class="col-md-8">
+        </div>
+    </div>
+</div>
+
+@code {
+    private TeamForCreateDTO team => teamState.Team;
+
+    private void BackToPlayers() => navigation.NavigateTo("/teams/listplayersforteams");
+}
