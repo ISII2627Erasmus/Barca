@@ -52,22 +52,28 @@
     }
     else
     {
-        <table class="table table-striped" id="TableOfPlayers">
-            <thead>
-                <tr><th>Name</th><th>Surname</th><th>Age</th><th>Sports (skill)</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Players)
-                {
-                    <tr>
-                        <td>@p.Name</td>
-                        <td>@p.Surname</td>
-                        <td>@p.Age</td>
-                        <td>@string.Join(", ", p.Sports.Select(s => $"{s.SportName} ({s.Skill})"))</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+        <h5>@Players.Count players found</h5>
+        <div class ="row" id ="TableOfPlayers">
+            @foreach (var p in Players)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100" style="min-height: 140px;">
+                        <div class="card-body d-flex justify-content-between">
+                            <div>
+                                <h6 class="fw-bold mb-1">@p.Name @p.Surname</h6>
+                                <small class="text-muted d-block mb-2">Age @p.Age</small>
+                                @foreach (var s in p.Sports)
+                                {
+                                    <div>
+                                        <span class="badge bg-secondary mb-1">@s.SportName (@s.Skill)</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     }
 </div>
 
@@ -90,6 +96,9 @@
                     .Select(s => s.SportName)
                     .Distinct().OrderBy(s => s).ToList();
     }
+
+    private string Initials(ApplicationUserForTeamDTO p) => 
+        $"{(string.IsNullOrEmpty(p.Name) ? "" : p.Name[..1])}{(string.IsNullOrEmpty(p.Surname) ? "" : p.Surname[..1])}";
 
     protected async Task LoadPlayers()
     {
