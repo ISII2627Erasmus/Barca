@@ -1,6 +1,7 @@
 @page "/teams/createteam"
 @using AppForSEII.Web.API
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
 @inject AppForSEIIAPIClient apiservice
 @inject TeamStateContainer teamState
 @inject NavigationManager navigation
@@ -39,12 +40,92 @@
 
         @* 3. Team data form (next step) *@
         <div class="col-md-8">
+            <EditForm Model="team" OnValidSubmit="CreateTeamAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="teamName">Team name</label>
+                        <InputText class="form-control" id="teamName" @bind-Value="team.Name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sportName">Sport</label>
+                        <InputSelect class="form-select" id="sportName" @bind-Value="team.SportName">
+                            <option value="">-- Select a sport --</option>
+                            @foreach (var sport in allSports)
+                            {
+                                <option value="@sport">@sport</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="maxMembers">Max. members</label>
+                        <InputNumber class="form-control" id="maxMembers" @bind-Value="team.MaxMembers" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="minAge">Min. age</label>
+                        <InputNumber class="form-control" id="minAge" @bind-Value="team.MinAge" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="maxAge">Max. age</label>
+                        <InputNumber class="form-control" id="maxAge" @bind-Value="team.MaxAge" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description">Description (optional)</label>
+                    <InputTextArea class="form-control" id="description" @bind-Value="team.Description" />
+                </div>
+
+                <h5>Invitation messages</h5>
+                @foreach (var invitation in team.TeamInvitations)
+                {
+                    <div class="mb-2">
+                        <label for="message_@invitation.UserId">@invitation.Name @invitation.Surname</label>
+                        <InputText class="form-control" id="@($"message_{invitation.UserId}")"
+                                @bind-Value="invitation.InvitationMessage" />
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-success mt-3" id="createTeam"
+                        disabled="@(!team.TeamInvitations.Any())">Create team</button>
+            </EditForm>
         </div>
     </div>
 </div>
 
 @code {
     private TeamForCreateDTO team => teamState.Team;
+
+    private List<string> allSports = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // the captain is the user who is logged in
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        team.CaptainUserName = authState.User.Identity?.Name;
+
+        // the sports offered are those that reg    istered users like to play
+        try
+        {
+            var players = await apiservice.GetUsersForTeamAsync(null, null, null, null);
+            allSports = players.SelectMany(p => p.Sports).Select(s => s.SportName)
+                               .Distinct().OrderBy(s => s).ToList();
+        }
+        catch (ApiException)
+        {
+            allSports = new List<string>();
+        }
+    }
+
+    private async Task CreateTeamAsync()
+    {
+        
+    }
 
     private void BackToPlayers() => navigation.NavigateTo("/teams/listplayersforteams");
 }
