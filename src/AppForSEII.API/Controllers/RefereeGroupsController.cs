@@ -1,10 +1,8 @@
 using System.Data;
 using System.Net;
-using System.Security.Claims;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.RefereeDTOs;
 using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +10,6 @@ namespace AppForSEII.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class RefereeGroupsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -88,12 +85,6 @@ namespace AppForSEII.API.Controllers
         public async Task<ActionResult<RefereeGroupDTO>>
             CreateRefereeGroup(RefereeGroupDTO refereeGroupDTO)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized();
-            }
-
             if (refereeGroupDTO.RefereeAssignments == null ||
                 refereeGroupDTO.RefereeAssignments.Count == 0)
             {
@@ -107,15 +98,13 @@ namespace AppForSEII.API.Controllers
                 .Include(item => item.Sport)
                 .FirstOrDefaultAsync(item =>
                     item.Id == refereeGroupDTO.GameId &&
-                    item.ResponsibleId == userId &&
                     item.Date > DateTime.Now);
 
             if (game == null)
             {
                 _logger.LogWarning(
-                    "Eligible game {GameId} was not found for user {UserId}.",
-                    refereeGroupDTO.GameId,
-                    userId);
+                    "Eligible game {GameId} was not found.",
+                    refereeGroupDTO.GameId);
                 return NotFound();
             }
 
@@ -166,6 +155,13 @@ namespace AppForSEII.API.Controllers
                 ModelState.AddModelError(
                     "RefereeAssignments",
                     "All selected referees must be instructed in the game's sport.");
+            }
+
+            if (referees.Any(referee => referee.Rating < 1))
+            {
+                ModelState.AddModelError(
+                    "RefereeAssignments",
+                    "Error! One of the Referees has less than 1 of rating.");
             }
 
             var busyRefereeIds = await _context.RefereeAssignments
