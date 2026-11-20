@@ -26,7 +26,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Football"))
+                "Football",
+                3)
         };
 
         // Act
@@ -52,7 +53,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 18,
                 Gender.Female,
                 "M",
-                new SportForPurchaseDTO("Football"))
+                "Football",
+                8)
         };
 
         // Act
@@ -78,7 +80,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 18,
                 Gender.Female,
                 "M",
-                new SportForPurchaseDTO("Football")),
+                "Football",
+                8),
             new(
                 _fixture.FootballBoots.Id,
                 "Football Boots",
@@ -87,7 +90,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Football"))
+                "Football",
+                3)
         };
 
         // Act
@@ -113,7 +117,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 18,
                 Gender.Female,
                 "M",
-                new SportForPurchaseDTO("Football")),
+                "Football",
+                8),
             new(
                 _fixture.BasketballShoes.Id,
                 "Basketball Shoes",
@@ -122,7 +127,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Basketball")),
+                "Basketball",
+                4),
             new(
                 _fixture.FootballBoots.Id,
                 "Football Boots",
@@ -131,7 +137,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Football"))
+                "Football",
+                3)
         };
 
         // Act
@@ -157,7 +164,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 18,
                 Gender.Female,
                 "M",
-                new SportForPurchaseDTO("Football")),
+                "Football",
+                8),
             new(
                 _fixture.BasketballShoes.Id,
                 "Basketball Shoes",
@@ -166,7 +174,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Basketball")),
+                "Basketball",
+                4),
             new(
                 _fixture.FootballBoots.Id,
                 "Football Boots",
@@ -175,7 +184,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
                 21,
                 Gender.Male,
                 "42",
-                new SportForPurchaseDTO("Football"))
+                "Football",
+                3)
         };
 
         // Act

@@ -52,7 +52,8 @@ public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
             "Fixture purchase",
             119.80m,
             false,
-            new PurchaseUserDTO("Taylor", "Smith"),
+            "Taylor",
+            "Smith",
             new List<PurchaseItemDTO>
             {
                 new(

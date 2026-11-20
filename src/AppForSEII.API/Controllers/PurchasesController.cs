@@ -37,7 +37,8 @@ public class PurchasesController : ControllerBase
                 purchase.PurchaseDescription,
                 purchase.TotalPrice,
                 purchase.IsWrapped,
-                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.User.Name,
+                purchase.User.Surname,
                 purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
                     purchaseItem.Item.Id,
                     purchaseItem.Item.Name,
@@ -154,7 +155,8 @@ public class PurchasesController : ControllerBase
                 purchase.PurchaseDescription,
                 purchase.TotalPrice,
                 purchase.IsWrapped,
-                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.User.Name,
+                purchase.User.Surname,
                 purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
                     purchaseItem.Item.Id,
                     purchaseItem.Item.Name,
