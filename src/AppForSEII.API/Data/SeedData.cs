@@ -74,7 +74,7 @@ public class SeedData
             (
                 Id: "1",
                 Name: "Petra",
-                Surname: "Petra Peric",
+                Surname: "Peric",
                 Email: "petra@alu.uclm.es",
                 BirthDate: new DateOnly(1990, 5, 15),
                 Age: 36,
