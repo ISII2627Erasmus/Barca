@@ -38,6 +38,7 @@ public class SeedData
         SeedGame(dbContext);
         SeedReferees(dbContext, userManager);
         SeedItems(dbContext);
+        SeedPurchases(dbContext);
 
         logger.LogInformation("Seed data initialized successfully.");
     }
