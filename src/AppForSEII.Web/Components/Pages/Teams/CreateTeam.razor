@@ -1,0 +1,157 @@
+@page "/teams/createteam"
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AppForSEIIAPIClient apiservice
+@inject TeamStateContainer teamState
+@inject NavigationManager navigation
+@inject AuthenticationStateProvider authProvider
+@attribute [Authorize]
+
+<PageTitle>Create Team</PageTitle>
+
+<div class="container">
+    @* 1. Header *@
+    <h3>Create your team</h3>
+
+    <div class="row">
+        @* 2. Selected players (UC step 4) *@
+        <div class="col-md-4">
+            <h5>Selected players (@team.TeamInvitations.Count)</h5>
+            @if (!team.TeamInvitations.Any())
+            {
+                <div class="alert alert-warning" id="noSelectedPlayers">
+                    You have not selected any players.
+                </div>
+            }
+            @foreach (var invitation in team.TeamInvitations)
+            {
+                <div class="card mb-2">
+                    <div class="card-body py-2">
+                        <h6 class="fw-bold mb-0">@invitation.Name @invitation.Surname</h6>
+                        <small class="text-muted">Age @invitation.Age</small>
+                    </div>
+                </div>
+            }
+            <button class="btn btn-outline-secondary mt-2" id="backToPlayers" @onclick="BackToPlayers">
+                Modify players
+            </button>
+        </div>
+
+        @* 3. Team data form (next step) *@
+        <div class="col-md-8">
+            @if (errorMessages.Any())
+            {
+                <div class="alert alert-danger" id="errorsCreatingTeam">
+                    @foreach (var error in errorMessages)
+                    {
+                        <div>@error</div>
+                    }
+                </div>
+            }
+            <EditForm Model="team" OnValidSubmit="CreateTeamAsync">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="teamName">Team name</label>
+                        <InputText class="form-control" id="teamName" @bind-Value="team.Name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label for="sportName">Sport</label>
+                        <InputSelect class="form-select" id="sportName" @bind-Value="team.SportName">
+                            <option value="">-- Select a sport --</option>
+                            @foreach (var sport in allSports)
+                            {
+                                <option value="@sport">@sport</option>
+                            }
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="maxMembers">Max. members</label>
+                        <InputNumber class="form-control" id="maxMembers" @bind-Value="team.MaxMembers" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="minAge">Min. age</label>
+                        <InputNumber class="form-control" id="minAge" @bind-Value="team.MinAge" />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="maxAge">Max. age</label>
+                        <InputNumber class="form-control" id="maxAge" @bind-Value="team.MaxAge" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description">Description (optional)</label>
+                    <InputTextArea class="form-control" id="description" @bind-Value="team.Description" />
+                </div>
+
+                <h5>Invitation messages</h5>
+                @foreach (var invitation in team.TeamInvitations)
+                {
+                    <div class="mb-2">
+                        <label for="message_@invitation.UserId">@invitation.Name @invitation.Surname</label>
+                        <InputText class="form-control" id="@($"message_{invitation.UserId}")"
+                                @bind-Value="invitation.InvitationMessage" />
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-success mt-3" id="createTeam"
+                        disabled="@(!team.TeamInvitations.Any())">Create team</button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TeamForCreateDTO team => teamState.Team;
+
+    private List<string> allSports = new List<string>();
+    private List<string> errorMessages = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authProvider.GetAuthenticationStateAsync();
+        team.CaptainUserName = authState.User.Identity?.Name;
+
+        try
+        {
+            var players = await apiservice.GetUsersForTeamAsync(null, null, null, null);
+            allSports = players.SelectMany(p => p.Sports).Select(s => s.SportName)
+                               .Distinct().OrderBy(s => s).ToList();
+        }
+        catch (ApiException)
+        {
+            allSports = new List<string>();
+        }
+    }
+
+    private async Task CreateTeamAsync()
+    {
+        errorMessages.Clear();
+        try
+        {
+            TeamDetailDTO createdTeam = await apiservice.CreateTeamAsync(team);
+            teamState.ClearTeam();
+            navigation.NavigateTo($"/teams/detailteam?TeamId={createdTeam.Id}");
+        }
+        catch (ApiException<ValidationProblemDetails> ex)
+        {
+            errorMessages = ex.Result.Errors.SelectMany(e => e.Value).ToList();
+        }
+        catch (ApiException<string> ex)
+        {
+            errorMessages.Add(ex.Result);
+        }
+        catch (ApiException ex)
+        {
+            errorMessages.Add($"Error creating the team: {ex.Message}");
+        }
+    }
+
+    private void BackToPlayers() => navigation.NavigateTo("/teams/listplayersforteams");
+}
