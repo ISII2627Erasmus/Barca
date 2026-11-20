@@ -279,7 +279,7 @@ public static void SeedSports(ApplicationDbContext dbContext)
                 "Adidas",
                 39.99m,
                 recommendedAge: null,
-                gender: null,
+                gender: Gender.Female,
                 size: "5",
                 quantityAvailableForPurchase: 20,
                 sport: football),
@@ -289,7 +289,7 @@ public static void SeedSports(ApplicationDbContext dbContext)
                 "Nike",
                 79.99m,
                 recommendedAge: 16,
-                gender: Gender.Other,
+                gender: Gender.Male,
                 size: "M",
                 quantityAvailableForPurchase: 10,
                 sport: basketball)
