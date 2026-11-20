@@ -84,7 +84,8 @@ namespace AppForSEII.API.Controllers
                 .Where(u => (sportName == null && skill == null || u.Interested.Any(i => (sportName == null || i.Sport.Name == sportName)
                             && (skill == null || i.Skill >= skill)))
                         && (minAge == null || u.Age >= minAge)
-                        && (maxAge == null || u.Age <= maxAge))
+                        && (maxAge == null || u.Age <= maxAge)
+                        && u.Interested.Any())
                 .OrderBy(u => u.Surname)
                     .ThenBy(u => u.Name)
                 .Select(u => new ApplicationUserForTeamDTO(u.Id, u.Name, u.Surname, u.Age,
