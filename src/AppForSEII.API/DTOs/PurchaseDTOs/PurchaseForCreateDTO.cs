@@ -1,9 +1,25 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace AppForSEII.API.DTOs.PurchaseDTOs;
 
 public class PurchaseForCreateDTO
 {
+    public PurchaseForCreateDTO()
+    {
+    }
+
+    protected PurchaseForCreateDTO(
+        string? purchaseDescription,
+        bool wrapped,
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName)
+    {
+        PurchaseDescription = purchaseDescription;
+        Wrapped = wrapped;
+        PurchaseItems = purchaseItems ?? throw new ArgumentNullException(nameof(purchaseItems));
+        CustomerUserName = customerUserName ?? throw new ArgumentNullException(nameof(customerUserName));
+    }
 
     public PurchaseForCreateDTO(
         string street,
@@ -14,46 +30,56 @@ public class PurchaseForCreateDTO
         string expirationDate,
         string? purchaseDescription,
         bool wrapped,
-        List<PurchaseItemDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName)
     {
-        Street = street;
-        City = city;
-        Province = province;
-        CreditCardNumber = creditCardNumber;
-        CCV = ccv;
-        ExpirationDate = expirationDate;
+        Street = street ?? throw new ArgumentNullException(nameof(street));
+        City = city ?? throw new ArgumentNullException(nameof(city));
+        Province = province ?? throw new ArgumentNullException(nameof(province));
+        CreditCardNumber = creditCardNumber ?? throw new ArgumentNullException(nameof(creditCardNumber));
+        CCV = ccv ?? throw new ArgumentNullException(nameof(ccv));
+        ExpirationDate = expirationDate ?? throw new ArgumentNullException(nameof(expirationDate));
+        PurchaseItems = purchaseItems ?? throw new ArgumentNullException(nameof(purchaseItems));
         PurchaseDescription = purchaseDescription;
         Wrapped = wrapped;
-        PurchaseItems = purchaseItems;
+        CustomerUserName = customerUserName ?? throw new ArgumentNullException(nameof(customerUserName));
     }
 
     [Required, StringLength(255, MinimumLength = 3)]
-    public string Street { get; set; } = string.Empty;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string Street { get; set; } = null!;
 
     [Required, StringLength(255, MinimumLength = 3)]
-    public string City { get; set; } = string.Empty;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string City { get; set; } = null!;
 
     [Required, StringLength(255, MinimumLength = 3)]
-    public string Province { get; set; } = string.Empty;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string Province { get; set; } = null!;
 
     [Required, CreditCard]
-    public string CreditCardNumber { get; set; } = string.Empty;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string CreditCardNumber { get; set; } = null!;
 
     [Required, RegularExpression(@"^\d{3,4}$", ErrorMessage = "CCV must be 3 or 4 digits")]
-    public string CCV { get; set; } = string.Empty;
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string CCV { get; set; } = null!;
 
-    [Required, RegularExpression(
-        @"^(0[1-9]|1[0-2])\/?([0-9]{2}|[0-9]{4})$",
-        ErrorMessage = "Expiration date must be in MM/YY or MM/YYYY format")]
-    public string ExpirationDate { get; set; } = string.Empty;
+    [Required, RegularExpression( @"^(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$", ErrorMessage = "Expiration date must be in MM/YY or MM/YYYY format")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public string ExpirationDate { get; set; } = null!;
+
+    [Required]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public List<PurchaseItemDTO> PurchaseItems { get; set; } = null!;
+
+    [Required]
+    public string CustomerUserName { get; set; } = null!;
 
     [StringLength(255)]
     public string? PurchaseDescription { get; set; }
 
     public bool Wrapped { get; set; }
-
-    [Required]
-    public List<PurchaseItemDTO> PurchaseItems { get; set; } = new();
 
     public override bool Equals(object? obj)
     {
@@ -64,9 +90,11 @@ public class PurchaseForCreateDTO
                CreditCardNumber == other.CreditCardNumber &&
                CCV == other.CCV &&
                ExpirationDate == other.ExpirationDate &&
+               CustomerUserName == other.CustomerUserName &&
                PurchaseDescription == other.PurchaseDescription &&
                Wrapped == other.Wrapped &&
-               PurchaseItems.SequenceEqual(other.PurchaseItems);
+               (PurchaseItems is null
+                   ? other.PurchaseItems is null : other.PurchaseItems is not null && PurchaseItems.SequenceEqual(other.PurchaseItems));
     }
 
     public override int GetHashCode()
@@ -78,11 +106,15 @@ public class PurchaseForCreateDTO
         hash.Add(CreditCardNumber);
         hash.Add(CCV);
         hash.Add(ExpirationDate);
+        hash.Add(CustomerUserName);
         hash.Add(PurchaseDescription);
         hash.Add(Wrapped);
-        foreach (var item in PurchaseItems)
+        if (PurchaseItems is not null)
         {
-            hash.Add(item);
+            foreach (var item in PurchaseItems)
+            {
+                hash.Add(item);
+            }
         }
 
         return hash.ToHashCode();

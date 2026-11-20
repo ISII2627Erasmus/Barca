@@ -33,6 +33,7 @@ namespace AppForSEII.API.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     MinimumNumberOfPlayers = table.Column<int>(type: "int", nullable: false),
+                    MinimumNumberOfTeams = table.Column<int>(type: "int", nullable: false),
                     NumberOfReferees = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BasicRules = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -273,15 +274,15 @@ namespace AppForSEII.API.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Street = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    City = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Province = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Street = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    City = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Province = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     CreditCardNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CCV = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ExpirationDate = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsWrapped = table.Column<bool>(type: "bit", nullable: false),
                     PurchaseDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PurchaseDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PurchaseStatus = table.Column<int>(type: "int", nullable: false)
                 },

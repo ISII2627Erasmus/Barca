@@ -1,7 +1,5 @@
-using System.Security.Claims;
 using AppForSEII.API.Controllers;
 using AppForSEII.API.DTOs.RefereeDTOs;
-using Microsoft.AspNetCore.Http;
 
 namespace AppForSEII.UT.RefereeGroupsController_test;
 
@@ -22,26 +20,15 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
     private readonly Referee _busyReferee;
     private readonly Referee _basketballReferee;
     private readonly RefereeGroup _existingGroup;
+    private readonly Referee _lowRatedReferee;
 
     public CreateRefereeGroup_test()
     {
-        _football = new Sport
-        {
-            Name = "Test Football",
-            MinimumNumberOfPlayers = 11,
-            NumberOfReferees = 2,
-            Description = "Test football",
-            BasicRules = "Test rules"
-        };
+        _football = new Sport(
+            "Test Football", 11, 2, 2, "Test football", "Test rules");
 
-        _basketball = new Sport
-        {
-            Name = "Test Basketball",
-            MinimumNumberOfPlayers = 5,
-            NumberOfReferees = 1,
-            Description = "Test basketball",
-            BasicRules = "Test rules"
-        };
+        _basketball = new Sport(
+            "Test Basketball", 5, 2, 1, "Test basketball", "Test rules");
 
         _context.Sports.AddRange(_football, _basketball);
         _context.SaveChanges();
@@ -73,9 +60,10 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
         _busyReferee = NewReferee("ref-busy", "Jamie", "Busy", _football, 2, 4);
         _basketballReferee = NewReferee(
             "ref-basketball", "Casey", "Basketball", _basketball, 4, 5);
+        _lowRatedReferee = NewReferee("ref-unrated", "Simon", "Unrated", _football, 0, 2);
 
         _context.Referees.AddRange(
-            _alex, _sam, _busyReferee, _basketballReferee);
+            _alex, _sam, _busyReferee, _basketballReferee, _lowRatedReferee);
         _context.SaveChanges();
 
         _existingGroup = new RefereeGroup(
@@ -132,25 +120,10 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
     }
 
     private RefereeGroupsController CreateController(
-        string? userId = OwnerId,
         ApplicationDbContext? context = null)
     {
         var mock = new Mock<ILogger<RefereeGroupsController>>();
-        var controller = new RefereeGroupsController(context ?? _context, mock.Object);
-
-        var claims = userId == null
-            ? Array.Empty<Claim>()
-            : new[] { new Claim(ClaimTypes.NameIdentifier, userId) };
-
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext
-            {
-                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "Unit test"))
-            }
-        };
-
-        return controller;
+        return new RefereeGroupsController(context ?? _context, mock.Object);
     }
 
     private static RefereeGroupDTO NewRequest(
@@ -215,6 +188,16 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
                 new("ref-busy", "Assistant referee", "Supports the main referee")
             });
 
+        var lowRatedReferee = NewRequest (
+            GameId,
+            assignments: new List<RefereeAssignedToDTO>
+            {
+                new("ref-alex", "Main referee", "Leads the referee group"),
+                new("ref-unrated", "Assistant referee", "Supports the main referee")
+            });
+        
+
+
         return new List<object?[]>
         {
             new object?[] { nullAssignments, "Select at least one referee." },
@@ -223,7 +206,8 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
             new object?[] { tooFewReferees, "This sport requires at least 2 referees." },
             new object?[] { unknownReferee, "One or more selected referees do not exist." },
             new object?[] { wrongSport, "All selected referees must be instructed in the game's sport." },
-            new object?[] { busyReferee, "One or more selected referees are already assigned to a future game." }
+            new object?[] { busyReferee, "One or more selected referees are already assigned to a future game." },
+            new object?[] { lowRatedReferee, "Error! One of the Referees has less than 1 of rating." }
         };
     }
 
@@ -232,7 +216,6 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
         return new List<object?[]>
         {
             new object?[] { NewRequest(999) },
-            new object?[] { NewRequest(OtherUserGameId) },
             new object?[] { NewRequest(PastGameId) }
         };
     }
@@ -244,22 +227,6 @@ public class CreateRefereeGroup_test : AppForSEII4SqliteUT
             new object?[] { NewRequest(GameWithGroupId) },
             new object?[] { NewRequest(GameId, "Existing") }
         };
-    }
-
-    [Fact]
-    [Trait("LevelTesting", "Unit Testing")]
-    [Trait("Database", "WithoutFixture")]
-    public async Task CreateRefereeGroup_UserIsNotAuthenticated_Unauthorized()
-    {
-        // Arrange
-        var controller = CreateController(null);
-        var request = NewRequest(GameId);
-
-        // Act
-        var result = await controller.CreateRefereeGroup(request);
-
-        // Assert
-        Assert.IsType<UnauthorizedResult>(result.Result);
     }
 
     [Theory]

@@ -15,4 +15,22 @@ public class GetGameDTO
     public string SportName { get; set; } = string.Empty;
 
     public List<InvitedTeamDTO> InvitedTeams { get; set; } = new();
+
+    public override bool Equals(object? obj)
+    {
+        return obj is GetGameDTO other &&
+               Id == other.Id &&
+               Name == other.Name &&
+               Date == other.Date &&
+               Place == other.Place &&
+               Description == other.Description &&
+               SportName == other.SportName &&
+               InvitedTeams.SequenceEqual(other.InvitedTeams);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            Id, Name, Date, Place, Description, SportName);
+    }
 }

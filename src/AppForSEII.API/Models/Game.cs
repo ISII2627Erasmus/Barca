@@ -1,3 +1,4 @@
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +8,27 @@ namespace AppForSEII.API.Models;
 [Index(nameof(Name), IsUnique = true)]
 public class Game
 {
+    public Game()
+    {
+    }
+
+    public Game(
+        string name,
+        DateTime date,
+        string place,
+        string? description,
+        Sport sport,
+        ApplicationUser responsible)
+    {
+        Name = name ?? throw new ArgumentNullException(nameof(name));
+        Date = date;
+        Place = place ?? throw new ArgumentNullException(nameof(place));
+        Description = description;
+        Sport = sport ?? throw new ArgumentNullException(nameof(sport));
+        Responsible = responsible ?? throw new ArgumentNullException(nameof(responsible));
+        ResponsibleId = responsible.Id;
+    }
+
     [Key]
     public int Id { get; set; }
 

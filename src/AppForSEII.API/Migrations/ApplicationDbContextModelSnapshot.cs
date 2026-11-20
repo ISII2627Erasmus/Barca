@@ -255,8 +255,8 @@ namespace AppForSEII.API.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("CreditCardNumber")
                         .IsRequired()
@@ -271,8 +271,8 @@ namespace AppForSEII.API.Migrations
 
                     b.Property<string>("Province")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<DateTime>("PurchaseDate")
                         .HasColumnType("datetime2");
@@ -285,10 +285,11 @@ namespace AppForSEII.API.Migrations
 
                     b.Property<string>("Street")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<decimal>("TotalPrice")
+                        .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("UserId")
@@ -402,6 +403,9 @@ namespace AppForSEII.API.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MinimumNumberOfPlayers")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MinimumNumberOfTeams")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")

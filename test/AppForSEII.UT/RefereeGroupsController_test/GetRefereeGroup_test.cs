@@ -13,14 +13,8 @@ public class GetRefereeGroup_test : AppForSEII4SqliteUT
 
     public GetRefereeGroup_test()
     {
-        _football = new Sport
-        {
-            Name = "Test Football",
-            MinimumNumberOfPlayers = 11,
-            NumberOfReferees = 2,
-            Description = "Test football",
-            BasicRules = "Test rules"
-        };
+        _football = new Sport(
+            "Test Football", 11, 2, 2, "Test football", "Test rules");
 
         _context.Sports.Add(_football);
         _context.SaveChanges();

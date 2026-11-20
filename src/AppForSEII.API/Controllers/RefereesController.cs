@@ -1,8 +1,6 @@
 using System.Net;
-using System.Security.Claims;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.RefereeDTOs;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,7 +8,6 @@ namespace AppForSEII.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
     public class RefereesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -32,10 +29,10 @@ namespace AppForSEII.API.Controllers
         [ProducesResponseType(
             typeof(ValidationProblemDetails),
             (int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<RefereesForRefereeGroupDTO>>
             GetRefereesForRefereeGroup(
-                int? gameId = null,
+                string? sportName = null,
                 int? minYearsRefereeing = null)
         {
             if (minYearsRefereeing.HasValue && minYearsRefereeing.Value < 1)
@@ -46,21 +43,14 @@ namespace AppForSEII.API.Controllers
                 return BadRequest(new ValidationProblemDetails(ModelState));
             }
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized();
-            }
-
             var games = _context.Games
                 .Where(game =>
-                    game.ResponsibleId == userId &&
                     game.Date > DateTime.Now &&
                     game.RefereeGroup == null);
 
-            if (gameId.HasValue)
+            if (!string.IsNullOrWhiteSpace(sportName))
             {
-                games = games.Where(game => game.Id == gameId.Value);
+                games = games.Where(game => game.Sport.Name == sportName);
             }
 
             var game = await games
@@ -80,8 +70,7 @@ namespace AppForSEII.API.Controllers
             if (game == null)
             {
                 _logger.LogWarning(
-                    "No eligible game was found for user {UserId}.",
-                    userId);
+                    "No eligible game was found.");
                 return NotFound();
             }
 
@@ -109,6 +98,15 @@ namespace AppForSEII.API.Controllers
                     referee.Rating,
                     referee.YearsRefereeing))
                 .ToListAsync();
+
+            if (referees.Count == 0)
+            {
+                _logger.LogWarning(
+                    "No referees are available for game {GameId} and the selected filters.",
+                    game.Id);
+                return NotFound(
+                    "No referees are available for the selected game and filters.");
+            }
 
             var result = new RefereesForRefereeGroupDTO(
                 game.Id,

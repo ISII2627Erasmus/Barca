@@ -1,0 +1,16 @@
+@page "/purchases/listitemsforpurchase"
+@using AppForSEII.Web.API
+@inject IAppForSEIIAPIClient apiservice
+@using Microsoft.AspNetCore.Authorization 
+@attribute [Authorize] 
+@* 2. Markup with C# expressions *@
+<button @onclick="@SearchMovies">Search</button>
+@* 3. C# logic *@ 
+@code {
+private ICollection<ItemsForPurchaseDTO>? items { get; set; } = new List<ItemsForPurchaseDTO>(); 
+    protected async void SearchMovies() { 
+        try{ items = await apiservice.GetItemsForPurchaseAsync( null, null); }
+        catch (ApiException ex) { items = new List<ItemsForPurchaseDTO>(); } 
+        StateHasChanged(); 
+    }
+}

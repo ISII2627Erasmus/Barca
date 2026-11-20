@@ -54,7 +54,7 @@ public class Purchase
     [Required, RegularExpression(@"^\d{3,4}$", ErrorMessage = "CCV must be 3 or 4 digits")]
     public string CCV { get; set; } = string.Empty;
 
-    [Required, RegularExpression(@"^(0[1-9]|1[0-2])\/?([0-9]{2}|[0-9]{4})$", ErrorMessage = "Invalid expiration date (MM/YY)")]
+    [Required, RegularExpression(@"^(0[1-9]|1[0-2])/([0-9]{2}|[0-9]{4})$", ErrorMessage = "Invalid expiration date (MM/YY or MM/YYYY)")]
     public string ExpirationDate { get; set; } = string.Empty;
 
     public bool IsWrapped { get; set; }
