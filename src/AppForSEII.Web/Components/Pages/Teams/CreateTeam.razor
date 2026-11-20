@@ -40,6 +40,15 @@
 
         @* 3. Team data form (next step) *@
         <div class="col-md-8">
+            @if (errorMessages.Any())
+            {
+                <div class="alert alert-danger" id="errorsCreatingTeam">
+                    @foreach (var error in errorMessages)
+                    {
+                        <div>@error</div>
+                    }
+                </div>
+            }
             <EditForm Model="team" OnValidSubmit="CreateTeamAsync">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
@@ -102,14 +111,13 @@
     private TeamForCreateDTO team => teamState.Team;
 
     private List<string> allSports = new List<string>();
+    private List<string> errorMessages = new List<string>();
 
     protected override async Task OnInitializedAsync()
     {
-        // the captain is the user who is logged in
         var authState = await authProvider.GetAuthenticationStateAsync();
         team.CaptainUserName = authState.User.Identity?.Name;
 
-        // the sports offered are those that reg    istered users like to play
         try
         {
             var players = await apiservice.GetUsersForTeamAsync(null, null, null, null);
@@ -124,7 +132,25 @@
 
     private async Task CreateTeamAsync()
     {
-        
+        errorMessages.Clear();
+        try
+        {
+            TeamDetailDTO createdTeam = await apiservice.CreateTeamAsync(team);
+            teamState.ClearTeam();
+            navigation.NavigateTo($"/teams/detailteam?TeamId={createdTeam.Id}");
+        }
+        catch (ApiException<ValidationProblemDetails> ex)
+        {
+            errorMessages = ex.Result.Errors.SelectMany(e => e.Value).ToList();
+        }
+        catch (ApiException<string> ex)
+        {
+            errorMessages.Add(ex.Result);
+        }
+        catch (ApiException ex)
+        {
+            errorMessages.Add($"Error creating the team: {ex.Message}");
+        }
     }
 
     private void BackToPlayers() => navigation.NavigateTo("/teams/listplayersforteams");
