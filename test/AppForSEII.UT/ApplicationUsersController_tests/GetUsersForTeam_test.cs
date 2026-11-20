@@ -19,6 +19,7 @@ namespace AppForSEII.UT.ApplicationUsersController_tests
                 new ApplicationUser("2", "Peter", "Jackson", "peter@uclm.es", new DateOnly(1996, 1, 1), 30, Gender.Male),
                 new ApplicationUser("3", "Luka", "Novak", "luka@uclm.es", new DateOnly(1998, 1, 1), 28, Gender.Male),
                 new ApplicationUser("4", "Sam", "Lopez", "sam@uclm.es", new DateOnly(2004, 1, 1), 22, Gender.Male),
+                new ApplicationUser("5", "Mia", "Babic", "mia@uclm.es", new DateOnly(2000, 1, 1), 26, Gender.Female),
             };
 
             _context.AddRange(sports);
