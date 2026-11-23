@@ -130,6 +130,8 @@
                     .SelectMany(p => p.Sports)
                     .Select(s => s.SportName)
                     .Distinct().OrderBy(s => s).ToList();
+                    sportName = allSports.FirstOrDefault();
+                    await LoadPlayers();
     }
 
     protected async Task LoadPlayers()
