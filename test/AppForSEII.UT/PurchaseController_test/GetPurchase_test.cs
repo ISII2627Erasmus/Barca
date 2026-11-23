@@ -46,29 +46,11 @@ public class GetPurchase_test : IClassFixture<DatabaseFixture4GetOperations>
 
         var controller = new PurchasesController(context, logger);
 
-        var expectedPurchase = new PurchaseDetailDTO(
-            _fixture.ExistingPurchase.Id,
-            _fixture.ExistingPurchase.PurchaseDate,
-            "Fixture purchase",
-            119.80m,
-            false,
-            "Taylor",
-            "Smith",
-            new List<PurchaseItemDTO>
-            {
-                new(
-                    _fixture.FootballBoots.Id,
-                    "Football Boots",
-                    "Nike",
-                    59.90m,
-                    21,
-                    Gender.Male,
-                    "42",
-                    "Football",
-                    2)
-            },
-            _fixture.Customer.UserName!);
-
+        var expectedPurchase = new PurchaseDetailDTO(_fixture.ExistingPurchase.Id, _fixture.ExistingPurchase.PurchaseDate, 
+        "Fixture purchase", 119.80m, false,"Taylor", "Smith", new List<PurchaseItemDTO>{
+        new(_fixture.FootballBoots.Id, "Football Boots","Nike", 59.90m, 21, Gender.Male, "42", "Football", 2)}, _fixture.Customer.UserName!);
+        // the ! tells the compiler “I know this isn’t null”
+        
         // Act
         var result = await controller.GetPurchase(_fixture.ExistingPurchase.Id);
 

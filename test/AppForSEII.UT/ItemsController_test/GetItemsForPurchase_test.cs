@@ -7,31 +7,15 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
 {
     private readonly DatabaseFixture4GetOperations _fixture;
 
-    public GetItemsForPurchase_test(DatabaseFixture4GetOperations fixture)
-    {
-        _fixture = fixture;
-    }
+    public GetItemsForPurchase_test(DatabaseFixture4GetOperations fixture){_fixture = fixture;}
 
     [Fact]
     public async Task FiltersByGenderAndSport()
     {
         // Arrange
-        var expected = new List<ItemsForPurchaseDTO>
-        {
-            new(
-                _fixture.FootballBoots.Id,
-                "Football Boots",
-                "Nike",
-                59.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Football",
-                3)
-        };
-
+        var expected = new List<ItemsForPurchaseDTO>{new(_fixture.BasketballShoes.Id, "Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", "Basketball", 4)};
         // Act
-        var result = await GetItems(Gender.Male, "Football");
+        var result = await GetItems(Gender.Male, "Basketball");
 
         // Assert
         var response = Assert.IsType<OkObjectResult>(result.Result);
@@ -43,19 +27,7 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
     public async Task FiltersByGenderOnly()
     {
         // Arrange
-        var expected = new List<ItemsForPurchaseDTO>
-        {
-            new(
-                _fixture.FootballShirt.Id,
-                "Football Shirt",
-                "Adidas",
-                39.90m,
-                18,
-                Gender.Female,
-                "M",
-                "Football",
-                8)
-        };
+        var expected = new List<ItemsForPurchaseDTO>{new(_fixture.FootballShirt.Id, "Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M", "Football", 8)};
 
         // Act
         var result = await GetItems(Gender.Female, null);
@@ -71,28 +43,8 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
     {
         // Arrange
         var expected = new List<ItemsForPurchaseDTO>
-        {
-            new(
-                _fixture.FootballShirt.Id,
-                "Football Shirt",
-                "Adidas",
-                39.90m,
-                18,
-                Gender.Female,
-                "M",
-                "Football",
-                8),
-            new(
-                _fixture.FootballBoots.Id,
-                "Football Boots",
-                "Nike",
-                59.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Football",
-                3)
-        };
+        {new(_fixture.FootballShirt.Id, "Football Shirt", "Adidas", 39.90m,18, Gender.Female, "M", "Football", 8),
+         new(_fixture.FootballBoots.Id, "Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", "Football", 3)};
 
         // Act
         var result = await GetItems(null, "Football");
@@ -107,39 +59,9 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
     public async Task ReturnsAllAvailableItemsWhenFiltersAreMissing()
     {
         // Arrange
-        var expected = new List<ItemsForPurchaseDTO>
-        {
-            new(
-                _fixture.FootballShirt.Id,
-                "Football Shirt",
-                "Adidas",
-                39.90m,
-                18,
-                Gender.Female,
-                "M",
-                "Football",
-                8),
-            new(
-                _fixture.BasketballShoes.Id,
-                "Basketball Shoes",
-                "Puma",
-                79.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Basketball",
-                4),
-            new(
-                _fixture.FootballBoots.Id,
-                "Football Boots",
-                "Nike",
-                59.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Football",
-                3)
-        };
+        var expected = new List<ItemsForPurchaseDTO>{new(_fixture.FootballShirt.Id, "Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M", "Football", 8),
+            new(_fixture.BasketballShoes.Id, "Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", "Basketball", 4),
+            new(_fixture.FootballBoots.Id,"Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", "Football", 3)};
 
         // Act
         var result = await GetItems(null, null);
@@ -154,42 +76,12 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
     public async Task TreatsWhitespaceSportAsNoFilter()
     {
         // Arrange
-        var expected = new List<ItemsForPurchaseDTO>
-        {
-            new(
-                _fixture.FootballShirt.Id,
-                "Football Shirt",
-                "Adidas",
-                39.90m,
-                18,
-                Gender.Female,
-                "M",
-                "Football",
-                8),
-            new(
-                _fixture.BasketballShoes.Id,
-                "Basketball Shoes",
-                "Puma",
-                79.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Basketball",
-                4),
-            new(
-                _fixture.FootballBoots.Id,
-                "Football Boots",
-                "Nike",
-                59.90m,
-                21,
-                Gender.Male,
-                "42",
-                "Football",
-                3)
-        };
+        var expected = new List<ItemsForPurchaseDTO>{new(_fixture.FootballShirt.Id,"Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M","Football", 8),
+            new(_fixture.BasketballShoes.Id, "Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", "Basketball", 4),
+            new(_fixture.FootballBoots.Id, "Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", "Football", 3)};
 
         // Act
-        var result = await GetItems(null, "   ");
+        var result = await GetItems(null, " ");
 
         // Assert
         var response = Assert.IsType<OkObjectResult>(result.Result);
@@ -213,9 +105,7 @@ public class GetItemsForPurchase_test : IClassFixture<DatabaseFixture4GetOperati
         Assert.Empty(actual);
     }
 
-    private async Task<ActionResult<List<ItemsForPurchaseDTO>>> GetItems(
-        Gender? gender,
-        string? sportName)
+    private async Task<ActionResult<List<ItemsForPurchaseDTO>>> GetItems(Gender? gender, string? sportName)
     {
         using var context = _fixture.CreateContext();
         var controller = new ItemsController(context);

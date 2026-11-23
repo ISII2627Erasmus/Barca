@@ -141,10 +141,8 @@ public class CreatePurchase_test : IClassFixture<DatabaseFixture4GetOperations>
             using var context = _fixture.CreateContext();
             var mock = new Mock<ILogger<PurchasesController>>();
             var controller = new PurchasesController(context, mock.Object);
-            var purchaseDTO = new PurchaseForCreateDTO(
-                "Main Street 1", "Barcelona", "Barcelona", "4111111111111111", "123", "12/30",
-                "Purchase test", true,
-                new List<PurchaseItemDTO> { new(_fixture.FootballBoots.Id, 1) }, _userName);
+            var purchaseDTO = new PurchaseForCreateDTO("Main Street 1", "Barcelona", "Barcelona", "4111111111111111", "123", "12/30",
+                "Purchase test", true,new List<PurchaseItemDTO> { new(_fixture.FootballBoots.Id, 1) }, _userName);
 
             // Act
             var result = await controller.CreatePurchase(purchaseDTO);

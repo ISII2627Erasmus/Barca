@@ -273,27 +273,8 @@ public static void SeedSports(ApplicationDbContext dbContext)
             .Single(sport => sport.Name == "Basketball");
 
         var itemsToSeed = new[]
-        {
-            new Item(
-                "Football",
-                "Adidas",
-                39.99m,
-                recommendedAge: null,
-                gender: null,
-                size: "5",
-                quantityAvailableForPurchase: 20,
-                sport: football),
-
-            new Item(
-                "Basketball Shoes",
-                "Nike",
-                79.99m,
-                recommendedAge: 16,
-                gender: Gender.Other,
-                size: "M",
-                quantityAvailableForPurchase: 10,
-                sport: basketball)
-        };
+        {new Item("Football", "Adidas", 39.99m, recommendedAge: null, gender: Gender.Male, size: "5", quantityAvailableForPurchase: 20, sport: football),
+         new Item("Basketball Shoes", "Nike", 79.99m, recommendedAge: 16, gender: Gender.Female, size: "M", quantityAvailableForPurchase: 10, sport: basketball)};
 
         foreach (Item item in itemsToSeed)
         {
