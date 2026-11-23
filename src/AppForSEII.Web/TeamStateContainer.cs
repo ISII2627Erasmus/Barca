@@ -12,6 +12,10 @@ namespace AppForSEII.Web
         public bool IsSelected(ApplicationUserForTeamDTO player) =>
             Team.TeamInvitations.Any(ti => ti.UserId == player.Id);
 
+        public List<ApplicationUserForTeamDTO> SelectedPlayers { get; private set; } = new 
+        List<ApplicationUserForTeamDTO>();
+
+
         public void AddPlayerToTeam(ApplicationUserForTeamDTO player)
         {
             if (!IsSelected(player))
@@ -24,17 +28,20 @@ namespace AppForSEII.Web
                     Age = player.Age,
                     InvitationMessage = ""
                 });
+                SelectedPlayers.Add(player);
             }
         }
 
         public void RemovePlayerFromTeam(TeamInvitationDTO invitation)
         {
             Team.TeamInvitations.Remove(invitation);
+            SelectedPlayers.RemoveAll(p => p.Id == invitation.UserId); 
         }
 
         public void ClearTeam()
         {
             Team = new TeamForCreateDTO() { TeamInvitations = new List<TeamInvitationDTO>() };
+            SelectedPlayers = new List<ApplicationUserForTeamDTO>();
         }
     }
 }

@@ -30,6 +30,10 @@
                     <div class="card-body py-2">
                         <h6 class="fw-bold mb-0">@invitation.Name @invitation.Surname</h6>
                         <small class="text-muted">Age @invitation.Age</small>
+                        @foreach (var s in teamState.SelectedPlayers.First(p => p.Id == invitation.UserId).Sports)
+                        {
+                            <div><span class="badge bg-secondary mb-1">@s.SportName (@s.Skill)</span></div>
+                        }
                     </div>
                 </div>
             }
@@ -96,7 +100,7 @@
                     <div class="mb-2">
                         <label for="message_@invitation.UserId">@invitation.Name @invitation.Surname</label>
                         <InputText class="form-control" id="@($"message_{invitation.UserId}")"
-                                @bind-Value="invitation.InvitationMessage" />
+                                   @bind-Value="invitation.InvitationMessage" />
                     </div>
                 }
 
