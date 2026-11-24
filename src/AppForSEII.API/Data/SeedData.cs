@@ -359,54 +359,61 @@ public static void SeedSports(ApplicationDbContext dbContext)
     }
 
     private static void SeedGame(ApplicationDbContext dbContext)
+{
+    var football = dbContext.Sports
+        .SingleOrDefault(s => s.Name == "Football")
+        ?? throw new InvalidOperationException(
+            "Football sport was not found.");
+
+    var basketball = dbContext.Sports
+        .SingleOrDefault(s => s.Name == "Basketball")
+        ?? throw new InvalidOperationException(
+            "Basketball sport was not found.");
+
+    var responsible = dbContext.Users
+        .SingleOrDefault(u => u.Email == "petra@alu.uclm.es")
+        ?? throw new InvalidOperationException(
+            "Responsible user was not found.");
+
+    var gamesToSeed = new[]
     {
-        var football = dbContext.Sports
-            .SingleOrDefault(s => s.Name == "Football")
-            ?? throw new InvalidOperationException(
-                "Football sport was not found.");
-
-        var basketball = dbContext.Sports
-            .SingleOrDefault(s => s.Name == "Basketball")
-            ?? throw new InvalidOperationException(
-                "Basketball sport was not found.");
-
-        var responsible = dbContext.Users
-            .SingleOrDefault(u => u.Email == "petra@alu.uclm.es")
-            ?? throw new InvalidOperationException(
-                "Responsible user was not found.");
-
-        var gamesToSeed = new[]
+        new Game
         {
-            new Game
-            {
-                Name = "Football Friendly Match",
-                Date = new DateTime(2026, 11, 15, 16, 0, 0),
-                Place = "Albacete Stadium",
-                Description = "Friendly football match between local teams.",
-                SportId = football.Id,
-                ResponsibleId = responsible.Id
-            },
-            new Game
-            {
-                Name = "Basketball Tournament",
-                Date = new DateTime(2026, 11, 20, 18, 0, 0),
-                Place = "University Sports Center",
-                Description = "Basketball tournament for university teams.",
-                SportId = basketball.Id,
-                ResponsibleId = responsible.Id
-            }
-        };
-
-        foreach (var game in gamesToSeed)
+            Name = "Football Friendly Match",
+            Date = DateTime.Today.AddDays(7).AddHours(16),
+            Place = "Albacete Stadium",
+            Description = "Friendly football match between local teams.",
+            SportId = football.Id,
+            ResponsibleId = responsible.Id
+        },
+        new Game
         {
-            if (!dbContext.Set<Game>().Any(g => g.Name == game.Name))
-            {
-                dbContext.Set<Game>().Add(game);
-            }
+            Name = "Basketball Tournament",
+            Date = DateTime.Today.AddDays(10).AddHours(18),
+            Place = "University Sports Center",
+            Description = "Basketball tournament for university teams.",
+            SportId = basketball.Id,
+            ResponsibleId = responsible.Id
         }
+    };
 
-        dbContext.SaveChanges();
+    foreach (var game in gamesToSeed)
+    {
+        var existingGame = dbContext.Set<Game>()
+            .SingleOrDefault(g => g.Name == game.Name);
+
+        if (existingGame == null)
+        {
+            dbContext.Set<Game>().Add(game);
+        }
+        else if (existingGame.Date <= DateTime.Now)
+        {
+            existingGame.Date = game.Date;
+        }
     }
+
+    dbContext.SaveChanges();
+}
 
     private static void SeedTeams(
     ApplicationDbContext dbContext,
