@@ -31,7 +31,8 @@ public class ItemsController(ApplicationDbContext context) : ControllerBase
                 item.RecommendedAge,
                 item.Gender,
                 item.Size,
-                new SportForPurchaseDTO(item.Sport.Name)))
+                item.Sport.Name,
+                item.QuantityAvailableForPurchase))
             .ToListAsync();
 
         return Ok(items);

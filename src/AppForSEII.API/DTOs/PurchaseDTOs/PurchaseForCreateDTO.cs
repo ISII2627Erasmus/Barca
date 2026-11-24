@@ -12,11 +12,13 @@ public class PurchaseForCreateDTO
     protected PurchaseForCreateDTO(
         string? purchaseDescription,
         bool wrapped,
-        List<PurchaseItemDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName)
     {
         PurchaseDescription = purchaseDescription;
         Wrapped = wrapped;
         PurchaseItems = purchaseItems ?? throw new ArgumentNullException(nameof(purchaseItems));
+        CustomerUserName = customerUserName ?? throw new ArgumentNullException(nameof(customerUserName));
     }
 
     public PurchaseForCreateDTO(
@@ -28,7 +30,8 @@ public class PurchaseForCreateDTO
         string expirationDate,
         string? purchaseDescription,
         bool wrapped,
-        List<PurchaseItemDTO> purchaseItems)
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName)
     {
         Street = street ?? throw new ArgumentNullException(nameof(street));
         City = city ?? throw new ArgumentNullException(nameof(city));
@@ -39,6 +42,7 @@ public class PurchaseForCreateDTO
         PurchaseItems = purchaseItems ?? throw new ArgumentNullException(nameof(purchaseItems));
         PurchaseDescription = purchaseDescription;
         Wrapped = wrapped;
+        CustomerUserName = customerUserName ?? throw new ArgumentNullException(nameof(customerUserName));
     }
 
     [Required, StringLength(255, MinimumLength = 3)]
@@ -69,6 +73,9 @@ public class PurchaseForCreateDTO
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public List<PurchaseItemDTO> PurchaseItems { get; set; } = null!;
 
+    [Required]
+    public string CustomerUserName { get; set; } = null!;
+
     [StringLength(255)]
     public string? PurchaseDescription { get; set; }
 
@@ -83,6 +90,7 @@ public class PurchaseForCreateDTO
                CreditCardNumber == other.CreditCardNumber &&
                CCV == other.CCV &&
                ExpirationDate == other.ExpirationDate &&
+               CustomerUserName == other.CustomerUserName &&
                PurchaseDescription == other.PurchaseDescription &&
                Wrapped == other.Wrapped &&
                (PurchaseItems is null
@@ -98,6 +106,7 @@ public class PurchaseForCreateDTO
         hash.Add(CreditCardNumber);
         hash.Add(CCV);
         hash.Add(ExpirationDate);
+        hash.Add(CustomerUserName);
         hash.Add(PurchaseDescription);
         hash.Add(Wrapped);
         if (PurchaseItems is not null)

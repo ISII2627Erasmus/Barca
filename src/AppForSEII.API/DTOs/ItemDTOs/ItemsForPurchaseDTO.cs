@@ -12,8 +12,11 @@ public class ItemsForPurchaseDTO
         int? recommendedAge,
         Gender? gender,
         string? size,
-        SportForPurchaseDTO sport)
+        string sportName,
+        int quantityAvailableForPurchase)
     {
+        ArgumentNullException.ThrowIfNull(sportName);
+
         Id = id;
         Name = name;
         Brand = brand;
@@ -21,7 +24,8 @@ public class ItemsForPurchaseDTO
         RecommendedAge = recommendedAge;
         Gender = gender;
         Size = size;
-        Sport = sport;
+        SportName = sportName;
+        QuantityAvailableForPurchase = quantityAvailableForPurchase;
     }
 
     public int Id { get; set; }
@@ -31,7 +35,8 @@ public class ItemsForPurchaseDTO
     public int? RecommendedAge { get; set; }
     public Gender? Gender { get; set; }
     public string? Size { get; set; }
-    public SportForPurchaseDTO Sport { get; set; } = new();
+    public string SportName { get; set; } = string.Empty;
+    public int QuantityAvailableForPurchase { get; set; }
 
     public override bool Equals(object? obj)
     {
@@ -43,42 +48,22 @@ public class ItemsForPurchaseDTO
                RecommendedAge == other.RecommendedAge &&
                Gender == other.Gender &&
                Size == other.Size &&
-               Sport.Equals(other.Sport);
+               SportName == other.SportName &&
+               QuantityAvailableForPurchase == other.QuantityAvailableForPurchase;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(
-            Id,
-            Name,
-            Brand,
-            Price,
-            RecommendedAge,
-            Gender,
-            Size,
-            Sport);
-    }
-}
-
-public class SportForPurchaseDTO
-{
-    public SportForPurchaseDTO()
-    {
-    }
-
-    public SportForPurchaseDTO(string name)
-    {
-        Name = name;
-    }
-    public string Name { get; set; } = string.Empty;
-
-    public override bool Equals(object? obj)
-    {
-        return obj is SportForPurchaseDTO other && Name == other.Name;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Name);
+        var hash = new HashCode();
+        hash.Add(Id);
+        hash.Add(Name);
+        hash.Add(Brand);
+        hash.Add(Price);
+        hash.Add(RecommendedAge);
+        hash.Add(Gender);
+        hash.Add(Size);
+        hash.Add(SportName);
+        hash.Add(QuantityAvailableForPurchase);
+        return hash.ToHashCode();
     }
 }

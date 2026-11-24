@@ -10,21 +10,23 @@ public class PurchaseDetailDTO : PurchaseForCreateDTO
         string? purchaseDescription,
         decimal totalPrice,
         bool wrapped,
-        PurchaseUserDTO user,
-        List<PurchaseItemDTO> purchaseItems) : base(purchaseDescription, wrapped, purchaseItems)
+        string? customerName,
+        string? customerSurname,
+        List<PurchaseItemDTO> purchaseItems,
+        string customerUserName) : base(purchaseDescription, wrapped, purchaseItems, customerUserName)
     {
-        ArgumentNullException.ThrowIfNull(user);
-
         Id = id;
         PurchaseDate = purchaseDate;
         TotalPrice = totalPrice;
-        User = user;
+        CustomerName = customerName;
+        CustomerSurname = customerSurname;
     }
 
     public int Id { get; set; }
     public DateTime PurchaseDate { get; set; }
     public decimal TotalPrice { get; set; }
-    public PurchaseUserDTO User { get; set; } = new();
+    public string? CustomerName { get; set; }
+    public string? CustomerSurname { get; set; }
 
     public override bool Equals(object? obj)
     {
@@ -33,39 +35,12 @@ public class PurchaseDetailDTO : PurchaseForCreateDTO
                Id == other.Id &&
                PurchaseDate == other.PurchaseDate &&
                TotalPrice == other.TotalPrice &&
-               User.Equals(other.User);
+               CustomerName == other.CustomerName &&
+               CustomerSurname == other.CustomerSurname;
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(base.GetHashCode(), Id, PurchaseDate, TotalPrice, User);
-    }
-}
-
-public class PurchaseUserDTO
-{
-    public PurchaseUserDTO()
-    {
-    }
-
-    public PurchaseUserDTO(string? name, string? surname)
-    {
-        Name = name;
-        Surname = surname;
-    }
-
-    public string? Name { get; set; }
-    public string? Surname { get; set; }
-
-    public override bool Equals(object? obj)
-    {
-        return obj is PurchaseUserDTO other &&
-               Name == other.Name &&
-               Surname == other.Surname;
-    }
-
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(Name, Surname);
+        return HashCode.Combine(base.GetHashCode(), Id, PurchaseDate, TotalPrice, CustomerName, CustomerSurname);
     }
 }

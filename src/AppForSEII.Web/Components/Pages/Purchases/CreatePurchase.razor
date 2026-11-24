@@ -1,0 +1,280 @@
+@page "/purchases/createpurchase"
+@using AppForSEII.Web.API
+@using AppForSEII.Web.Components.Pages.Purchases
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@using System.Text.RegularExpressions
+@attribute [Authorize]
+@inject IAppForSEIIAPIClient ApiService
+@inject PurchaseStateContainer PurchaseState
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Create Purchase</PageTitle>
+
+<div class="container">
+    <h3>Complete your purchase</h3>
+
+    @if (errorMessages.Count > 0)
+    {
+        <div class="alert alert-danger" id="purchaseErrors" role="alert">
+            @foreach (var message in errorMessages)
+            {
+                <div>@message</div>
+            }
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-5">
+            <h5>Selected items (@lines.Count)</h5>
+            @if (lines.Count == 0)
+            {
+                <div class="alert alert-warning" id="noSelectedItems">
+                    You have not selected any items. Return to the item list and select at least one.
+                </div>
+            }
+            @foreach (var line in lines)
+            {
+                <div class="card mb-2" @key="line.Item.Id">
+                    <div class="card-body py-2">
+                        <h6 class="fw-bold mb-1">@line.Item.Name</h6>
+                        <small class="text-muted d-block">Recommended age: @(line.Item.RecommendedAge?.ToString() ?? "Any age")</small>
+                        <small class="text-muted d-block">Gender: @(line.Item.Gender?.ToString() ?? "All genders")</small>
+                        <small class="text-muted d-block">Size: @(string.IsNullOrWhiteSpace(line.Item.Size) ? "—" : line.Item.Size)</small>
+                        <small class="text-muted d-block">Brand: @line.Item.Brand</small>
+                        <small class="text-muted d-block">Sport: @SportName(line.Item)</small>
+                        <small class="fw-semibold">Unit price: @FormatPrice(line.Item.Price)</small>
+
+                        <div class="mt-2">
+                            <label for="@($"quantity_{line.Item.Id}")">Quantity (available: @line.Item.QuantityAvailableForPurchase)</label>
+                            <input class="form-control" id="@($"quantity_{line.Item.Id}")" type="number" min="1"
+                                   max="@line.Item.QuantityAvailableForPurchase" @bind="line.PurchaseItem.Quantity" />
+                            @if (!string.IsNullOrWhiteSpace(line.Error))
+                            {
+                                <div class="text-danger" role="alert">@line.Error</div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            @if (lines.Count > 0)
+            {
+                <p class="text-end fw-bold" id="purchaseTotal">Total: @FormatPrice(TotalPrice)</p>
+            }
+            <button class="btn btn-outline-secondary" id="backToPurchaseItems" @onclick="BackToItems">
+                Modify items
+            </button>
+        </div>
+
+        <div class="col-md-7">
+            @if (lines.Count > 0)
+            {
+                <EditForm Model="purchase" OnValidSubmit="CreatePurchaseAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <h5>Delivery address</h5>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label for="street">Street</label>
+                            <InputText class="form-control" id="street" @bind-Value="purchase.Street" autocomplete="street-address" />
+                            <ValidationMessage For="() => purchase.Street" />
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="city">City</label>
+                            <InputText class="form-control" id="city" @bind-Value="purchase.City" autocomplete="address-level2" />
+                            <ValidationMessage For="() => purchase.City" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="province">Province</label>
+                            <InputText class="form-control" id="province" @bind-Value="purchase.Province" autocomplete="address-level1" />
+                            <ValidationMessage For="() => purchase.Province" />
+                        </div>
+                    </div>
+
+                    <h5>Payment details</h5>
+                    <div class="mb-3">
+                        <label for="creditCardNumber">Credit card number</label>
+                        <InputText class="form-control" id="creditCardNumber" @bind-Value="purchase.CreditCardNumber"
+                                   autocomplete="cc-number" inputmode="numeric" />
+                        <ValidationMessage For="() => purchase.CreditCardNumber" />
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="ccv">CCV</label>
+                            <InputText class="form-control" id="ccv" type="password" @bind-Value="purchase.Ccv"
+                                       autocomplete="cc-csc" inputmode="numeric" />
+                            <ValidationMessage For="() => purchase.Ccv" />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="expirationDate">Expiration date (MM/YY)</label>
+                            <InputText class="form-control" id="expirationDate" @bind-Value="purchase.ExpirationDate"
+                                       autocomplete="cc-exp" placeholder="MM/YY" />
+                            <ValidationMessage For="() => purchase.ExpirationDate" />
+                        </div>
+                    </div>
+
+                    <h5>Additional details</h5>
+                    <div class="mb-3">
+                        <label for="purchaseDescription">Description (optional)</label>
+                        <InputTextArea class="form-control" id="purchaseDescription" @bind-Value="purchase.PurchaseDescription" />
+                        <ValidationMessage For="() => purchase.PurchaseDescription" />
+                    </div>
+                    <div class="form-check mb-3">
+                        <InputCheckbox class="form-check-input" id="wrapped" @bind-Value="purchase.Wrapped" />
+                        <label class="form-check-label" for="wrapped">Wrap this purchase as a gift</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-success mt-2" id="createPurchase" disabled="@isSubmitting">
+                        @(isSubmitting ? "Saving purchase…" : "Save purchase")
+                    </button>
+                </EditForm>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private PurchaseForCreateDTO purchase = new();
+    private List<PurchaseLineItem> lines = new();
+    private List<string> errorMessages = new();
+    private string customerUserName = string.Empty;
+    private bool isSubmitting;
+
+    private decimal TotalPrice => lines.Sum(line => Convert.ToDecimal(line.Item.Price) * line.PurchaseItem.Quantity);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PurchaseState.SelectedCount == 0)
+        {
+            Navigation.NavigateTo("/purchases/listitemsforpurchase");
+            return;
+        }
+
+        lines = PurchaseState.SelectedItems
+            .Select(item => new PurchaseLineItem(item, new PurchaseItemDTO
+            {
+                ItemId = item.Id,
+                Quantity = 1
+            }))
+            .ToList();
+        purchase.PurchaseItems = lines.Select(line => line.PurchaseItem).ToList();
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        customerUserName = authState.User.Identity?.Name ?? string.Empty;
+        purchase.CustomerUserName = customerUserName;
+        if (string.IsNullOrWhiteSpace(customerUserName))
+            errorMessages.Add("Could not determine the signed-in customer's username. Sign in again and retry.");
+    }
+
+    private async Task CreatePurchaseAsync()
+    {
+        errorMessages.Clear();
+        foreach (var line in lines)
+        {
+            line.Error = line.PurchaseItem.Quantity < 1
+                ? "Quantity must be at least 1."
+                : line.PurchaseItem.Quantity > line.Item.QuantityAvailableForPurchase
+                    ? $"Only {line.Item.QuantityAvailableForPurchase} unit(s) are currently available."
+                    : null;
+        }
+
+        if (lines.Any(line => line.Error is not null))
+        {
+            errorMessages.Add("Correct the item quantities before saving the purchase.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(customerUserName))
+        {
+            errorMessages.Add("Could not determine the signed-in customer's username. Sign in again and retry.");
+            return;
+        }
+
+        if (!new CreditCardAttribute().IsValid(purchase.CreditCardNumber))
+        {
+            errorMessages.Add("Enter a valid credit card number.");
+            return;
+        }
+
+        if (!HasCurrentOrFutureExpiration(purchase.ExpirationDate))
+        {
+            errorMessages.Add("The card expiration date must be this month or later.");
+            return;
+        }
+
+        isSubmitting = true;
+        try
+        {
+            purchase.CustomerUserName = customerUserName;
+            purchase.PurchaseItems = lines.Select(line => line.PurchaseItem).ToList();
+
+            var createdPurchase = await ApiService.CreatePurchaseAsync(purchase);
+            PurchaseState.ClearCart();
+            Navigation.NavigateTo($"/purchases/detailpurchase?PurchaseId={createdPurchase.Id}");
+        }
+        catch (ApiException<ValidationProblemDetails> exception)
+        {
+            errorMessages.AddRange(exception.Result.Errors.SelectMany(error => error.Value));
+        }
+        catch (ApiException<string> exception)
+        {
+            // A 409 means stock changed after the item list was loaded. Keep the
+            // form and quantities so the user can correct the affected line.
+            errorMessages.Add(exception.Result);
+        }
+        catch (ApiException exception)
+        {
+            errorMessages.Add($"Error saving the purchase: {exception.Message}");
+        }
+        catch (HttpRequestException)
+        {
+            errorMessages.Add("The purchase service is unavailable. Your entries are still here; try again later.");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void BackToItems() => Navigation.NavigateTo("/purchases/listitemsforpurchase");
+
+    private static string SportName(ItemsForPurchaseDTO item) =>
+        !string.IsNullOrWhiteSpace(item.SportName) ? item.SportName : item.Sport?.Name ?? string.Empty;
+
+    private static bool HasCurrentOrFutureExpiration(string? expirationDate)
+    {
+        var match = Regex.Match(expirationDate ?? string.Empty,
+            @"^(?<month>0[1-9]|1[0-2])/(?<year>[0-9]{2}|[0-9]{4})$");
+        if (!match.Success)
+            return false;
+
+        var month = int.Parse(match.Groups["month"].Value, CultureInfo.InvariantCulture);
+        var yearText = match.Groups["year"].Value;
+        var year = int.Parse(yearText, CultureInfo.InvariantCulture);
+        if (yearText.Length == 2)
+            year += 2000;
+        if (year < DateTime.MinValue.Year || year > DateTime.MaxValue.Year)
+            return false;
+
+        var currentMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        var cardExpirationMonth = new DateTime(year, month, 1);
+        return cardExpirationMonth >= currentMonth;
+    }
+
+    private static string FormatPrice(double price) => $"{price:0.00} €";
+    private static string FormatPrice(decimal price) => $"{price:0.00} €";
+
+    private sealed class PurchaseLineItem(ItemsForPurchaseDTO item, PurchaseItemDTO purchaseItem)
+    {
+        public ItemsForPurchaseDTO Item { get; } = item;
+        public PurchaseItemDTO PurchaseItem { get; } = purchaseItem;
+        public string? Error { get; set; }
+    }
+}

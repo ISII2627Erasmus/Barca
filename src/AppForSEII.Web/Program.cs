@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using AppForSEII.Web;
 using AppForSEII.Web.Components;
 using AppForSEII.Web.Components.Account;
 using AppForSEII.Web.Data;
@@ -18,6 +19,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<PurchaseStateContainer>();
 
 builder.Services.AddAuthentication(options =>
     {
