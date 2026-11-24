@@ -5,6 +5,7 @@
 @attribute [Authorize]
 @inject AppForSEIIAPIClient ApiService
 @inject PurchaseStateContainer PurchaseState
+@inject NavigationManager Navigation
 
 <PageTitle>Purchase Sport Items</PageTitle>
 
@@ -184,44 +185,6 @@
         </section>
     }
 
-    @if (selectionSaved)
-    {
-        <section class="card border-primary" aria-labelledby="review-heading">
-            <div class="card-body">
-                <h2 id="review-heading" class="h4">Selected Items For Purchase</h2>
-                <p>Review the item details before continuing with quantities and delivery information.</p>
-                <div class="table-responsive">
-                    <table class="table align-middle" id="PurchaseReviewItems">
-                        <thead>
-                            <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Recommended age</th>
-                                <th scope="col">Gender</th>
-                                <th scope="col">Price</th>
-                                <th scope="col">Size</th>
-                                <th scope="col">Brand</th>
-                                <th scope="col">Sport</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var item in PurchaseState.SelectedItems)
-                            {
-                                <tr @key="item.Id">
-                                    <td>@item.Name</td>
-                                    <td>@(item.RecommendedAge?.ToString() ?? "Any age")</td>
-                                    <td>@(item.Gender?.ToString() ?? "All genders")</td>
-                                    <td>@FormatPrice(Convert.ToDecimal(item.Price))</td>
-                                    <td>@(string.IsNullOrWhiteSpace(item.Size) ? "—" : item.Size)</td>
-                                    <td>@item.Brand</td>
-                                    <td>@GetSportName(item)</td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-    }
 </div>
 
 @code {
@@ -233,7 +196,6 @@
     private bool isLoading;
     private bool hasLoadedCatalog;
     private bool cartIsOpen;
-    private bool selectionSaved;
 
     protected override async Task OnInitializedAsync()
     {
@@ -287,8 +249,7 @@
 
     private void AddItem(ItemsForPurchaseDTO item)
     {
-        if (PurchaseState.AddItem(item))
-            selectionSaved = false;
+        PurchaseState.AddItem(item);
     }
 
     private void RemoveItem(int itemId)
@@ -306,8 +267,7 @@
         if (PurchaseState.SelectedCount == 0)
             return;
 
-        selectionSaved = true;
-        cartIsOpen = false;
+        Navigation.NavigateTo("/purchases/createpurchase");
     }
 
     private void ToggleCart() => cartIsOpen = !cartIsOpen;
@@ -321,7 +281,6 @@
 
     private void OnPurchaseStateChanged()
     {
-        selectionSaved = false;
         _ = InvokeAsync(StateHasChanged);
     }
 
