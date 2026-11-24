@@ -1,16 +1,332 @@
 @page "/purchases/listitemsforpurchase"
 @using AppForSEII.Web.API
-@inject IAppForSEIIAPIClient apiservice
-@using Microsoft.AspNetCore.Authorization 
-@attribute [Authorize] 
-@* 2. Markup with C# expressions *@
-<button @onclick="@SearchMovies">Search</button>
-@* 3. C# logic *@ 
+@using Microsoft.AspNetCore.Authorization
+@implements IDisposable
+@attribute [Authorize]
+@inject AppForSEIIAPIClient ApiService
+@inject PurchaseStateContainer PurchaseState
+
+<PageTitle>Purchase Sport Items</PageTitle>
+
+<div class="container-fluid purchase-items-page">
+    <header class="mb-4">
+        <h1>Select Sport Items For Purchase</h1>
+        <div class="row align-items-center gy-2">
+            <div class="col-md-3">
+                <strong>Items selected: @PurchaseState.SelectedCount</strong>
+            </div>
+            <div class="col-md-4">
+                <strong>Estimated total (one of each): @FormatPrice(PurchaseState.TotalPrice)</strong>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <button id="PurchaseCart" class="btn btn-outline-primary" @onclick="ToggleCart" aria-expanded="@cartIsOpen">
+                    Purchase Cart (@PurchaseState.SelectedCount): @FormatPrice(PurchaseState.TotalPrice)
+                </button>
+                <button id="SavePurchaseSelection" class="btn btn-primary ms-2" @onclick="SaveSelection" disabled="@(PurchaseState.SelectedCount == 0)">
+                    Save selection
+                </button>
+            </div>
+        </div>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">@errorMessage</div>
+    }
+
+    <section class="mb-4" aria-labelledby="filters-heading">
+        <h2 id="filters-heading" class="h4">Filter Sport Items</h2>
+        <div class="row g-2 align-items-end">
+            <div class="col-sm-5 col-lg-3">
+                <label class="form-label" for="GenderFilter">Gender</label>
+                <select id="GenderFilter" class="form-select" @bind="selectedGender">
+                    <option value="">All genders</option>
+                    @foreach (var gender in Enum.GetValues<Gender>())
+                    {
+                        <option value="@gender">@gender</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-5 col-lg-3">
+                <label class="form-label" for="SportFilter">Sport</label>
+                <select id="SportFilter" class="form-select" @bind="selectedSport">
+                    <option value="">All sports</option>
+                    @foreach (var sport in availableSports)
+                    {
+                        <option value="@sport">@sport</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-2 col-lg-3 d-flex gap-2">
+                <button id="SearchAvailableItems" class="btn btn-outline-primary" @onclick="SearchItemsAsync" disabled="@isLoading">
+                    Search items
+                </button>
+                <button class="btn btn-outline-secondary" @onclick="ClearFiltersAsync" disabled="@isLoading">
+                    Clear
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section class="mb-4" aria-labelledby="results-heading">
+        <h2 id="results-heading" class="h4">Available Items</h2>
+        @if (isLoading)
+        {
+            <p role="status">Loading available items…</p>
+        }
+        else if (items.Count > 0)
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="TableOfItems">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Recommended age</th>
+                            <th scope="col">Gender</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Size</th>
+                            <th scope="col">Sport</th>
+                            <th scope="col">Available</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in items)
+                        {
+                            var alreadySelected = IsSelected(item.Id);
+                            <tr @key="item.Id">
+                                <td>@item.Name</td>
+                                <td>@(item.RecommendedAge?.ToString() ?? "Any age")</td>
+                                <td>@(item.Gender?.ToString() ?? "All genders")</td>
+                                <td>@FormatPrice(Convert.ToDecimal(item.Price))</td>
+                                <td>@(string.IsNullOrWhiteSpace(item.Size) ? "—" : item.Size)</td>
+                                <td>@GetSportName(item)</td>
+                                <td>@item.QuantityAvailableForPurchase</td>
+                                <td>
+                                    <button id="itemToPurchase_@item.Id" class="btn btn-sm btn-outline-primary"
+                                            @onclick="() => AddItem(item)" disabled="@(alreadySelected || item.QuantityAvailableForPurchase < 1)">
+                                        @(alreadySelected ? "Selected" : "Add")
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else if (string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <p class="text-muted">
+                @if (hasLoadedCatalog && (selectedGender.HasValue || !string.IsNullOrWhiteSpace(selectedSport)))
+                {
+                    <span>No items match the selected filters.</span>
+                }
+                else
+                {
+                    <span>There are no items currently available for purchase.</span>
+                }
+            </p>
+        }
+    </section>
+
+    @if (cartIsOpen)
+    {
+        <section class="card mb-4" aria-labelledby="cart-heading">
+            <div class="card-body">
+                <h2 id="cart-heading" class="h4">Purchase Cart</h2>
+                @if (PurchaseState.SelectedCount == 0)
+                {
+                    <p class="text-muted mb-0">Your cart is empty. Add an available item to begin.</p>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle" id="SelectedItems">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Recommended age</th>
+                                    <th scope="col">Gender</th>
+                                    <th scope="col">Price</th>
+                                    <th scope="col">Size</th>
+                                    <th scope="col">Brand</th>
+                                    <th scope="col">Sport</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in PurchaseState.SelectedItems)
+                                {
+                                    <tr @key="item.Id">
+                                        <td>@item.Name</td>
+                                        <td>@(item.RecommendedAge?.ToString() ?? "Any age")</td>
+                                        <td>@(item.Gender?.ToString() ?? "All genders")</td>
+                                        <td>@FormatPrice(Convert.ToDecimal(item.Price))</td>
+                                        <td>@(string.IsNullOrWhiteSpace(item.Size) ? "—" : item.Size)</td>
+                                        <td>@item.Brand</td>
+                                        <td>@GetSportName(item)</td>
+                                        <td>
+                                            <button id="ItemSelected_@item.Id" class="btn btn-sm btn-outline-danger" @onclick="() => RemoveItem(item.Id)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                        <strong>Estimated total for one of each: @FormatPrice(PurchaseState.TotalPrice)</strong>
+                        <button class="btn btn-outline-danger" @onclick="ClearCart">Clear cart</button>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+    @if (selectionSaved)
+    {
+        <section class="card border-primary" aria-labelledby="review-heading">
+            <div class="card-body">
+                <h2 id="review-heading" class="h4">Selected Items For Purchase</h2>
+                <p>Review the item details before continuing with quantities and delivery information.</p>
+                <div class="table-responsive">
+                    <table class="table align-middle" id="PurchaseReviewItems">
+                        <thead>
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Recommended age</th>
+                                <th scope="col">Gender</th>
+                                <th scope="col">Price</th>
+                                <th scope="col">Size</th>
+                                <th scope="col">Brand</th>
+                                <th scope="col">Sport</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in PurchaseState.SelectedItems)
+                            {
+                                <tr @key="item.Id">
+                                    <td>@item.Name</td>
+                                    <td>@(item.RecommendedAge?.ToString() ?? "Any age")</td>
+                                    <td>@(item.Gender?.ToString() ?? "All genders")</td>
+                                    <td>@FormatPrice(Convert.ToDecimal(item.Price))</td>
+                                    <td>@(string.IsNullOrWhiteSpace(item.Size) ? "—" : item.Size)</td>
+                                    <td>@item.Brand</td>
+                                    <td>@GetSportName(item)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    }
+</div>
+
 @code {
-private ICollection<ItemsForPurchaseDTO>? items { get; set; } = new List<ItemsForPurchaseDTO>(); 
-    protected async void SearchMovies() { 
-        try{ items = await apiservice.GetItemsForPurchaseAsync( null, null); }
-        catch (ApiException ex) { items = new List<ItemsForPurchaseDTO>(); } 
-        StateHasChanged(); 
+    private List<ItemsForPurchaseDTO> items = new();
+    private List<string> availableSports = new();
+    private Gender? selectedGender;
+    private string selectedSport = string.Empty;
+    private string? errorMessage;
+    private bool isLoading;
+    private bool hasLoadedCatalog;
+    private bool cartIsOpen;
+    private bool selectionSaved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PurchaseState.OnChange += OnPurchaseStateChanged;
+        await SearchItemsAsync();
+    }
+
+    private async Task SearchItemsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ApiService.GetItemsForPurchaseAsync(selectedGender, selectedSport);
+            items = result?.ToList() ?? new List<ItemsForPurchaseDTO>();
+            hasLoadedCatalog = true;
+
+            // Keep the sport choices based on the unfiltered catalogue so choosing
+            // a gender does not make other sports disappear from the filter.
+            if (!selectedGender.HasValue && string.IsNullOrWhiteSpace(selectedSport))
+            {
+                availableSports = items
+                    .Select(GetSportName)
+                    .Where(sport => !string.IsNullOrWhiteSpace(sport))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(sport => sport)
+                    .ToList();
+            }
+        }
+        catch (ApiException)
+        {
+            errorMessage = "The purchase items could not be loaded. Please try again.";
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage = "The purchase service is unavailable. Please try again later.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private Task ClearFiltersAsync()
+    {
+        selectedGender = null;
+        selectedSport = string.Empty;
+        return SearchItemsAsync();
+    }
+
+    private void AddItem(ItemsForPurchaseDTO item)
+    {
+        if (PurchaseState.AddItem(item))
+            selectionSaved = false;
+    }
+
+    private void RemoveItem(int itemId)
+    {
+        PurchaseState.RemoveItem(itemId);
+    }
+
+    private void ClearCart()
+    {
+        PurchaseState.ClearCart();
+    }
+
+    private void SaveSelection()
+    {
+        if (PurchaseState.SelectedCount == 0)
+            return;
+
+        selectionSaved = true;
+        cartIsOpen = false;
+    }
+
+    private void ToggleCart() => cartIsOpen = !cartIsOpen;
+
+    private bool IsSelected(int itemId) => PurchaseState.SelectedItems.Any(item => item.Id == itemId);
+
+    private static string GetSportName(ItemsForPurchaseDTO item) =>
+        !string.IsNullOrWhiteSpace(item.SportName) ? item.SportName : item.Sport?.Name ?? string.Empty;
+
+    private static string FormatPrice(decimal amount) => $"{amount:0.00} €";
+
+    private void OnPurchaseStateChanged()
+    {
+        selectionSaved = false;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        PurchaseState.OnChange -= OnPurchaseStateChanged;
     }
 }

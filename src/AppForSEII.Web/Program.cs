@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
+using AppForSEII.Web;
 using AppForSEII.Web.Components;
 using AppForSEII.Web.Components.Account;
 using AppForSEII.Web.Data;
@@ -18,6 +19,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<PurchaseStateContainer>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -76,7 +78,7 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 string? URI2API = builder.Configuration.GetValue(typeof(string), "AppForSEIIAPIClient_URL") as string;
 
 //the environment variable URI2API is defined in appsettings.json
-builder.Services.AddScoped<IAppForSEIIAPIClient>(sp =>new AppForSEIIAPIClient(URI2API, new HttpClient()));
+builder.Services.AddScoped<AppForSEIIAPIClient>(sp =>new AppForSEIIAPIClient(URI2API, new HttpClient()));
 
 var app = builder.Build();
 
