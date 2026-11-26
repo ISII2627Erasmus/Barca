@@ -1,31 +1,26 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">AppForSEII.MAUI</a>
-    </div>
+﻿<div class="top-row brand">
+    <a class="brand-link" href="">
+        <span class="brand-logo" aria-hidden="true">M+</span>
+        <span class="brand-text">
+            <span class="brand-name">ManiPlus</span>
+            <span class="brand-tagline">Play. Connect. Compete.</span>
+        </span>
+    </a>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
+        <p class="nav-section">WORKSPACE</p>
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
                 <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        <div class="nav-item px-3">
-            <div class="nav-item px-3">
-                <NavLink class="nav-link" href="teams/create">
-                    <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Team
-                </NavLink>
-            </div>
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+        <div class="nav-item">
+            <NavLink class="nav-link" href="teams/create">
+                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Create Team
             </NavLink>
         </div>
     </nav>

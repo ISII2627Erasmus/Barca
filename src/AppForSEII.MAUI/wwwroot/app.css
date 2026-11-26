@@ -1,9 +1,11 @@
 html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-}
+    font-family: Inter, "Segoe UI", Roboto, system-ui, sans-serif;
+    background: #0b111b;
+    color: #eef4ff;
+}   
 
 a, .btn-link {
-    color: #006bb7;
+    color: #8bb3ff;
 }
 
 .btn-primary {
@@ -90,7 +92,7 @@ h1:focus {
         position: sticky;
         top: 0;
         height: env(safe-area-inset-top);
-        background-color: #f7f7f7;
+        background-color: #0b111b;
         width: 100%;
         z-index: 1;
     }
