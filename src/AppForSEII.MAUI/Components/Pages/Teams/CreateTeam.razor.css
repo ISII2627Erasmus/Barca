@@ -10,14 +10,9 @@
     --ct-muted: #a9b6cc;
     --ct-error: #ff9b9b;
 
-    background: var(--ct-bg);
     color: var(--ct-text);
-    font-family: Inter, "Segoe UI", Roboto, system-ui, sans-serif;
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 20px 16px 0;
-    border-radius: 24px;
-    min-height: 100%;
 }
 
 .ct-header h1 {
