@@ -1,0 +1,311 @@
+.ct-page {
+    --ct-bg: #0b111b;
+    --ct-surface: #101824;
+    --ct-surface-2: #17212f;
+    --ct-line: #2a3647;
+    --ct-blue: #193f7c;
+    --ct-accent: #8bb3ff;
+    --ct-mint: #24d197;
+    --ct-text: #eef4ff;
+    --ct-muted: #a9b6cc;
+    --ct-error: #ff9b9b;
+
+    color: var(--ct-text);
+    max-width: 760px;
+    margin: 0 auto;
+}
+
+.ct-header h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0 0 12px;
+}
+
+.ct-step-label {
+    color: var(--ct-accent);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0 0 4px;
+}
+
+.ct-progress {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+}
+
+.ct-progress-segment {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--ct-line);
+}
+
+.ct-progress-segment.is-done {
+    background: var(--ct-mint);
+}
+
+.ct-card {
+    background: var(--ct-surface);
+    border: 1px solid var(--ct-line);
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.ct-card h2 {
+    font-size: 1.2rem;
+    font-weight: 800;
+    margin: 0 0 12px;
+}
+
+.ct-card h2.ct-section-title {
+    color: var(--ct-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+}
+
+.ct-label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin: 12px 0 6px;
+}
+
+.ct-input {
+    
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 12px;
+    background: var(--ct-surface-2);
+    color: var(--ct-text);
+    border: 1px solid var(--ct-line);
+    border-radius: 12px;
+    font-size: 1rem;
+}
+
+.ct-input.is-invalid {
+    border: 2px solid var(--ct-error);
+}
+
+.ct-input:focus {
+    outline: 3px solid var(--ct-accent);
+    outline-offset: 1px;
+}
+
+.ct-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.ct-hint,
+.ct-muted {
+    color: var(--ct-muted);
+    font-size: 0.85rem;
+    margin: 6px 0 0;
+}
+
+.ct-error,
+.ct-errors {
+    color: var(--ct-error);
+    font-weight: 600;
+    margin: 12px 0 0;
+}
+
+.ct-errors {
+    padding-left: 20px;
+}
+
+.ct-notice {
+    background: var(--ct-surface-2);
+    border-left: 4px solid var(--ct-mint);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 12px 0 0;
+    font-size: 0.9rem;
+}
+
+/* Summary bar: step 1 data stays visible on step 2 (external memory). */
+.ct-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: var(--ct-blue);
+    color: var(--ct-text);
+    border-radius: 16px;
+    padding: 10px 10px 10px 16px;
+    margin-bottom: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.ct-summary-text {
+    font-weight: 700;
+}
+
+/* Chips wrap onto new lines like a FlexLayout with Wrap. */
+.ct-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ct-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.ct-chip-selected {
+    background: var(--ct-accent);
+    color: var(--ct-bg);
+    border: none;
+}
+
+.ct-chip-x {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--ct-bg);
+    color: var(--ct-accent);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.ct-chip-recent {
+    background: transparent;
+    color: var(--ct-text);
+    border: 2px dashed var(--ct-accent);
+}
+
+.ct-chip:disabled,
+.ct-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.ct-player-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.ct-player {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--ct-line);
+}
+
+.ct-player:last-child {
+    border-bottom: none;
+}
+
+.ct-player-name {
+    font-weight: 700;
+    margin: 0;
+}
+
+.ct-added {
+    color: var(--ct-mint);
+    font-weight: 700;
+    min-width: 72px;
+    text-align: center;
+}
+
+.ct-review {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 0 0 12px;
+}
+
+.ct-review dt {
+    color: var(--ct-muted);
+    font-weight: 600;
+}
+
+.ct-review dd {
+    margin: 0;
+    font-weight: 700;
+}
+
+.ct-success h2 {
+    color: var(--ct-mint);
+}
+
+.ct-btn {
+    min-height: 44px;
+    min-width: 72px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.ct-btn-primary {
+    background: var(--ct-accent);
+    color: var(--ct-bg);
+}
+
+.ct-btn-secondary {
+    background: var(--ct-surface-2);
+    color: var(--ct-accent);
+    border-color: var(--ct-accent);
+}
+
+.ct-btn-ghost {
+    background: transparent;
+    color: var(--ct-text);
+    border-color: var(--ct-line);
+    margin-top: 12px;
+}
+
+.ct-btn-summary {
+    background: var(--ct-accent);
+    color: var(--ct-bg);
+}
+
+.ct-btn:focus-visible,
+.ct-chip:focus-visible {
+    outline: 3px solid #ffd166;
+    outline-offset: 2px;
+}
+
+.ct-actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 12px 0 16px;
+    background: var(--ct-bg);
+}
+
+.ct-actions .ct-btn-ghost {
+    margin-top: 0;
+    margin-right: auto;
+}
+
+@media (max-width: 480px) {
+    .ct-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}

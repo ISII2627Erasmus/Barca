@@ -1,0 +1,371 @@
+@page "/teams/create"
+@implements IDisposable
+@inject TeamApiService TeamApi
+@inject CreateTeamState State
+@inject RecentTeammatesStore RecentStore
+
+<PageTitle>Create Team</PageTitle>
+
+<div class="ct-page">
+    <header class="ct-header">
+        @if (createdTeam == null)
+        {
+            <p class="ct-step-label" id="stepLabel" aria-live="polite">Step @State.CurrentStep of 3 · @StepName</p>
+        }
+        <h1>Create Team</h1>
+        @if (createdTeam == null)
+        {
+            <div class="ct-progress" aria-hidden="true">
+                @for (var i = 1; i <= 3; i++)
+                {
+                    <span class="ct-progress-segment @(i <= State.CurrentStep ? "is-done" : "")"></span>
+                }
+            </div>
+        }
+    </header>
+
+    @if (createdTeam != null)
+    {
+        <section class="ct-card ct-success" id="teamCreated">
+            <h2>Team @createdTeam.Name created</h2>
+            <p>@createdTeam.SportName · Age @createdTeam.MinAge–@createdTeam.MaxAge · @createdTeam.Invitations.Count invitations sent</p>
+            <p class="ct-muted">Your teammates were saved as recent teammates for next time.</p>
+            <button class="ct-btn ct-btn-primary" id="createAnotherTeam" @onclick="StartNewTeam">Create another team</button>
+        </section>
+    }
+    else if (State.CurrentStep == 1)
+    {
+        <section class="ct-card">
+            <h2>Team details</h2>
+
+            <label class="ct-label" for="teamName">Team name</label>
+            <input class="ct-input @(State.IsNameTaken ? "is-invalid" : "")" id="teamName" maxlength="9" placeholder="e.g. Hoops"
+                   aria-invalid="@State.IsNameTaken" aria-describedby="teamNameHint"
+                   @bind="State.Team.Name" @bind:event="oninput" />
+            @if (State.IsNameTaken)
+            {
+                <p class="ct-error" id="teamNameHint" role="alert">A team named '@State.Team.Name.Trim()' already exists. Choose another name.</p>
+            }
+            else
+            {
+                <p class="ct-hint" id="teamNameHint">4–9 characters (@State.Team.Name.Length/9)</p>
+            }
+
+            <label class="ct-label" for="sportName">Sport</label>
+            <select class="ct-input" id="sportName" @bind="State.Team.SportName">
+                <option value="">-- Select a sport --</option>
+                @foreach (var sport in allSports)
+                {
+                    <option value="@sport">@sport</option>
+                }
+            </select>
+
+            <div class="ct-row">
+                <div>
+                    <label class="ct-label" for="minAge">Min. age</label>
+                    <input class="ct-input" id="minAge" type="number" min="3" @bind="State.Team.MinAge" />
+                </div>
+                <div>
+                    <label class="ct-label" for="maxAge">Max. age</label>
+                    <input class="ct-input" id="maxAge" type="number" min="3" @bind="State.Team.MaxAge" />
+                </div>
+                <div>
+                    <label class="ct-label" for="maxMembers">Max. players</label>
+                    <input class="ct-input" id="maxMembers" type="number" min="2" @bind="State.Team.MaxMembers" />
+                </div>
+            </div>
+            <p class="ct-hint">Max. players includes you as captain.</p>
+
+            <label class="ct-label" for="description">Description (optional)</label>
+            <textarea class="ct-input" id="description" rows="2" @bind="State.Team.Description"></textarea>
+
+            @if (loadError != null)
+            {
+                <p class="ct-error" role="alert">@loadError</p>
+                <button class="ct-btn ct-btn-ghost" id="retryLoad" @onclick="LoadSportsAsync">Retry</button>
+            }
+
+            @if (errors.Any())
+            {
+                <ul class="ct-errors" id="detailsErrors" role="alert">
+                    @foreach (var error in errors)
+                    {
+                        <li>@error</li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <footer class="ct-actions">
+            <button class="ct-btn ct-btn-primary" id="continueToPlayers" @onclick="ContinueToPlayersAsync">Continue</button>
+        </footer>
+    }
+    else if (State.CurrentStep == 2)
+    {
+        var recent = RecentSuggestions;
+
+        <div class="ct-summary" id="teamSummary">
+            <span class="ct-summary-text">
+                @State.Team.Name · @State.Team.SportName · Age @State.Team.MinAge–@State.Team.MaxAge · Max @State.Team.MaxMembers
+            </span>
+            <button class="ct-btn ct-btn-summary" id="editDetails" aria-label="Edit team details" @onclick="() => GoTo(1)">Edit</button>
+        </div>
+
+        @if (removedPlayers.Any())
+        {
+            <p class="ct-notice" role="status">Removed because they no longer fit the team: @string.Join(", ", removedPlayers)</p>
+        }
+
+        <section class="ct-card">
+            <h2 class="ct-section-title">SELECTED (@State.SelectedPlayers.Count / @(State.Team.MaxMembers - 1))</h2>
+            @if (!State.SelectedPlayers.Any())
+            {
+                <p class="ct-muted" id="noSelectedPlayers">No teammates selected yet. Tap Add on a player below.</p>
+            }
+            else
+            {
+                <div class="ct-chips" id="selectedPlayers">
+                    @foreach (var player in State.SelectedPlayers)
+                    {
+                        <button class="ct-chip ct-chip-selected" id="selected_@player.Id"
+                                aria-label="Remove @player.FullName" @onclick="() => State.RemovePlayer(player.Id)">
+                            @player.FullName <span class="ct-chip-x" aria-hidden="true">×</span>
+                        </button>
+                    }
+                </div>
+            }
+            @if (State.IsFull)
+            {
+                <p class="ct-notice" id="teamFull" role="status">Team is full: @State.Team.MaxMembers of @State.Team.MaxMembers places taken, including you.</p>
+            }
+        </section>
+
+        @if (recent.Any())
+        {
+            <section class="ct-card">
+                <h2 class="ct-section-title">RECENT TEAMMATES</h2>
+                <div class="ct-chips" id="recentTeammates">
+                    @foreach (var player in recent)
+                    {
+                        <button class="ct-chip ct-chip-recent" id="recent_@player.Id" disabled="@State.IsFull"
+                                aria-label="Add @player.FullName" @onclick="() => State.AddPlayer(player)">
+                            <span aria-hidden="true">+</span> @player.FullName · @player.Age
+                        </button>
+                    }
+                </div>
+            </section>
+        }
+
+        <section class="ct-card">
+            <h2 class="ct-section-title">PLAYERS · @State.Team.SportName.ToUpper() · AGE @State.Team.MinAge–@State.Team.MaxAge</h2>
+            @if (loadingPlayers)
+            {
+                <p class="ct-muted">Loading players…</p>
+            }
+            else if (loadError != null)
+            {
+                <p class="ct-error" role="alert">@loadError</p>
+                <button class="ct-btn ct-btn-ghost" id="retryPlayers" @onclick="LoadPlayersAsync">Retry</button>
+            }
+            else if (!players.Any())
+            {
+                <p class="ct-muted" id="noPlayers">No players match this sport and age range.</p>
+            }
+            else
+            {
+                <ul class="ct-player-list" id="playersList">
+                    @foreach (var player in players)
+                    {
+                        <li class="ct-player">
+                            <div>
+                                <p class="ct-player-name">@player.FullName</p>
+                                <p class="ct-muted">Age @player.Age @SkillText(player)</p>
+                            </div>
+                            @if (State.IsSelected(player.Id))
+                            {
+                                <span class="ct-added" id="playerAdded_@player.Id">Added ✓</span>
+                            }
+                            else
+                            {
+                                <button class="ct-btn ct-btn-secondary" id="addPlayer_@player.Id" disabled="@State.IsFull"
+                                        aria-label="Add @player.FullName" @onclick="() => State.AddPlayer(player)">Add</button>
+                            }
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <footer class="ct-actions">
+            <button class="ct-btn ct-btn-ghost" id="backToDetails" @onclick="() => GoTo(1)">Back</button>
+            <button class="ct-btn ct-btn-primary" id="continueToReview" disabled="@(!State.SelectedPlayers.Any())"
+                    @onclick="() => GoTo(3)">Continue</button>
+        </footer>
+    }
+    else
+    {
+        <section class="ct-card" id="reviewSummary">
+            <h2>Review</h2>
+            <dl class="ct-review">
+                <dt>Team</dt>
+                <dd>@State.Team.Name</dd>
+                <dt>Sport</dt>
+                <dd>@State.Team.SportName</dd>
+                <dt>Age</dt>
+                <dd>@State.Team.MinAge–@State.Team.MaxAge</dd>
+                <dt>Max. players</dt>
+                <dd>@State.Team.MaxMembers (including you)</dd>
+                <dt>Captain</dt>
+                <dd>@ApiConfig.CaptainDisplayName</dd>
+                @if (!string.IsNullOrWhiteSpace(State.Team.Description))
+                {
+                    <dt>Description</dt>
+                    <dd>@State.Team.Description</dd>
+                }
+            </dl>
+            <button class="ct-btn ct-btn-ghost" id="editDetailsFromReview" @onclick="() => GoTo(1)">Edit details</button>
+        </section>
+
+        <section class="ct-card">
+            <h2 class="ct-section-title">INVITATION MESSAGES (@State.SelectedPlayers.Count)</h2>
+            @foreach (var player in State.SelectedPlayers)
+            {
+                <label class="ct-label" for="message_@player.Id">@player.FullName</label>
+                <input class="ct-input" id="message_@player.Id" maxlength="255" value="@State.GetMessage(player.Id)"
+                       @oninput="e => State.SetMessage(player.Id, e.Value?.ToString() ?? string.Empty)" />
+            }
+            <button class="ct-btn ct-btn-ghost" id="editPlayers" @onclick="() => GoTo(2)">Edit players</button>
+        </section>
+
+        @if (errors.Any())
+        {
+            <ul class="ct-errors" id="createTeamErrors" role="alert">
+                @foreach (var error in errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        }
+
+        <footer class="ct-actions">
+            <button class="ct-btn ct-btn-ghost" id="backToPlayers" @onclick="() => GoTo(2)">Back</button>
+            <button class="ct-btn ct-btn-primary" id="createTeam" disabled="@saving" @onclick="CreateTeamAsync">
+                @(saving ? "Creating…" : "Create team")
+            </button>
+        </footer>
+    }
+</div>
+
+@code {
+    private List<string> allSports = new();
+    private List<ApplicationUserForTeamDTO> players = new();
+    private List<string> errors = new();
+    private List<string> removedPlayers = new();
+    private string? loadError;
+    private bool loadingPlayers;
+    private bool saving;
+    private TeamDetailDTO? createdTeam;
+
+    private string StepName => State.CurrentStep switch
+    {
+        1 => "Details",
+        2 => "Players",
+        _ => "Review"
+    };
+
+    private List<ApplicationUserForTeamDTO> RecentSuggestions =>
+        RecentStore.GetSuggestions(State.Team.MinAge, State.Team.MaxAge, State.SelectedPlayers.Select(p => p.Id));
+
+        protected override async Task OnInitializedAsync()
+    {
+        State.OnChange += OnStateChanged;
+        await Task.WhenAll(LoadSportsAsync(), LoadTeamNamesAsync());
+        if (State.CurrentStep == 2)
+            await LoadPlayersAsync();
+    }
+
+    private async Task LoadTeamNamesAsync()
+    {
+        var result = await TeamApi.GetTeamsAsync();
+        State.ExistingTeamNames.Clear();
+        State.ExistingTeamNames.UnionWith(result.Teams.Select(t => t.Name));
+    }
+
+    private async Task LoadSportsAsync()
+    {
+        var result = await TeamApi.GetUsersForTeamAsync(null, null, null);
+        loadError = result.Error;
+        allSports = result.Players
+            .SelectMany(p => p.Sports)
+            .Select(s => s.SportName)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+    }
+
+    private async Task LoadPlayersAsync()
+    {
+        loadingPlayers = true;
+        var result = await TeamApi.GetUsersForTeamAsync(State.Team.SportName, State.Team.MinAge, State.Team.MaxAge);
+        players = result.Players;
+        loadError = result.Error;
+        loadingPlayers = false;
+    }
+
+    private void GoTo(int step)
+    {
+        errors.Clear();
+        State.GoToStep(step);
+    }
+
+    private async Task ContinueToPlayersAsync()
+    {
+        errors = State.ValidateDetails();
+        if (errors.Any())
+            return;
+
+        removedPlayers = State.RemovePlayersThatNoLongerFit();
+        State.GoToStep(2);
+        await LoadPlayersAsync();
+    }
+
+    private async Task CreateTeamAsync()
+    {
+        errors = State.ValidateMessages();
+        if (errors.Any())
+            return;
+
+        saving = true;
+        var teammates = State.SelectedPlayers.ToList();
+        var result = await TeamApi.CreateTeamAsync(State.ToCreateDTO());
+        saving = false;
+
+        if (!result.Success)
+        {
+            errors = result.Errors;
+            return;
+        }
+
+        RecentStore.SaveTeammates(teammates);
+        State.ExistingTeamNames.Add(result.Team!.Name);
+        createdTeam = result.Team;
+        removedPlayers.Clear();
+        State.Reset();
+    }
+
+    private void StartNewTeam()
+    {
+        createdTeam = null;
+        errors.Clear();
+    }
+
+    private string SkillText(ApplicationUserForTeamDTO player)
+    {
+        var skill = player.Sports.FirstOrDefault(s => s.SportName == State.Team.SportName)?.Skill;
+        return skill == null ? string.Empty : $"· Skill {skill}/5";
+    }
+
+    private void OnStateChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => State.OnChange -= OnStateChanged;
+}

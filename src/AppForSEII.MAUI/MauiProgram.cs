@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using AppForSEII.MAUI.Services;
 
 namespace AppForSEII.MAUI;
 
@@ -15,6 +16,25 @@ public static class MauiProgram
 			});
 
 		builder.Services.AddMauiBlazorWebView();
+		builder.Services.AddSingleton(sp =>
+		{
+			var handler = new HttpClientHandler();
+#if DEBUG
+			// Dev certificate is not trusted on the emulator: accept it only in DEBUG and only for local API hosts
+			handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+				errors == System.Net.Security.SslPolicyErrors.None
+				|| message.RequestUri?.Host is "10.0.2.2" or "localhost";
+#endif
+			return new HttpClient(handler)
+			{
+				BaseAddress = new Uri(ApiConfig.BaseAddress),
+				Timeout = TimeSpan.FromSeconds(10)
+			};
+		});
+		builder.Services.AddSingleton<TeamApiService>();
+		builder.Services.AddSingleton<IPreferences>(Preferences.Default);
+		builder.Services.AddSingleton<RecentTeammatesStore>();
+		builder.Services.AddSingleton<CreateTeamState>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();

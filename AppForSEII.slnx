@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AppForSEII.MAUI/AppForSEII.MAUI.csproj" />
+  </Folder>
   <Folder Name="/src/appforseii.api/">
     // Changed to uppercase because I use linux and here filesystem is case-sensitive
     <Project Path="src/AppForSEII.API/AppForSEII.API.csproj" />
