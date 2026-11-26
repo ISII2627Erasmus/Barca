@@ -1,5 +1,136 @@
 ﻿@page "/"
+@inject TeamApiService TeamApi
+@inject RecentTeammatesStore RecentStore
+@inject NavigationManager Navigation
 
-<h1>Hello, world!</h1>
+<PageTitle>ManiPlus · Overview</PageTitle>
 
-Welcome to your new app.
+<div class="home">
+    <header class="home-top">
+        <p class="home-eyebrow">MANIPLUS</p>
+        <h1>Overview</h1>
+    </header>
+
+    <section class="home-greeting">
+        <span class="home-avatar" aria-hidden="true">PP</span>
+        <div>
+            <p class="home-muted">@Greeting</p>
+            <p class="home-name">@ApiConfig.CaptainDisplayName</p>
+            <p class="home-muted">Albacete, Spain</p>
+        </div>
+    </section>
+
+    <section class="home-hero" aria-labelledby="heroTitle">
+        <div>
+            <span class="home-chip">YOUR TEAMS</span>
+            <h2 id="heroTitle">Ready for the next match?</h2>
+            <p class="home-hero-text">@HeroText</p>
+        </div>
+        <div class="home-hero-count">
+            <span class="home-hero-number" id="teamsCount">@teams.Count.ToString("00")</span>
+            <span class="home-hero-label">TEAMS</span>
+        </div>
+    </section>
+
+    <div class="home-grid">
+        <section>
+            <h3 class="home-section-title">Quick actions</h3>
+            <div class="home-actions">
+                <button class="home-action" id="quickCreateTeam" @onclick="GoToCreateTeam">
+                    <span class="home-action-icon" aria-hidden="true">+</span>
+                    <span class="home-action-text">
+                        <span class="home-action-name">Create Team</span>
+                        <span class="home-muted">3 steps · invite players</span>
+                    </span>
+                </button>
+            </div>
+
+            <h3 class="home-section-title">Recent teammates</h3>
+            @if (!recent.Any())
+            {
+                <p class="home-muted" id="noRecentTeammates">Teammates you pick when creating a team appear here.</p>
+            }
+            else
+            {
+                <ul class="home-recent" id="homeRecentTeammates">
+                    @foreach (var player in recent)
+                    {
+                        <li class="home-recent-chip">@player.FullName · @player.Age</li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section>
+            <h3 class="home-section-title">Your teams</h3>
+            @if (loading)
+            {
+                <p class="home-muted">Loading teams…</p>
+            }
+            else if (error != null)
+            {
+                <p class="home-error" role="alert">@error</p>
+                <button class="home-btn" id="retryTeams" @onclick="LoadTeamsAsync">Retry</button>
+            }
+            else if (!teams.Any())
+            {
+                <p class="home-muted" id="noTeams">You have no teams yet.</p>
+            }
+            else
+            {
+                <ul class="home-teams" id="homeTeams">
+                    @foreach (var team in teams)
+                    {
+                        <li class="home-team">
+                            <span class="home-team-badge @(team.SportName == "Basketball" ? "is-blue" : "is-mint")" aria-hidden="true">
+                                @Initials(team.Name)
+                            </span>
+                            <div>
+                                <p class="home-team-name">@team.Name</p>
+                                <p class="home-muted">@team.SportName · Age @team.MinAge–@team.MaxAge · @team.NumberOfMembers @(team.NumberOfMembers == 1 ? "member" : "members")</p>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+</div>
+
+@code {
+    private List<TeamForGameDTO> teams = new();
+    private List<ApplicationUserForTeamDTO> recent = new();
+    private bool loading = true;
+    private string? error;
+
+    private string Greeting => DateTime.Now.Hour switch
+    {
+        < 12 => "Good morning",
+        < 19 => "Good afternoon",
+        _ => "Good evening"
+    };
+
+    private string HeroText => teams.Count == 0
+        ? "You have no teams yet. Create your first one in three steps."
+        : $"{teams.Count} {(teams.Count == 1 ? "team" : "teams")} and {recent.Count} recent teammates ready to play.";
+
+    protected override async Task OnInitializedAsync()
+    {
+        recent = RecentStore.GetAll();
+        await LoadTeamsAsync();
+    }
+
+    private async Task LoadTeamsAsync()
+    {
+        loading = true;
+        var result = await TeamApi.GetTeamsAsync(captainName: ApiConfig.CaptainFirstName);
+        teams = result.Teams;
+        error = result.Error;
+        loading = false;
+    }
+
+    private void GoToCreateTeam() => Navigation.NavigateTo("teams/create");
+
+    private static string Initials(string name) =>
+        name.Length >= 2 ? name[..2].ToUpper() : name.ToUpper();
+}
