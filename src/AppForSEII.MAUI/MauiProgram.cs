@@ -32,6 +32,9 @@ public static class MauiProgram
 			};
 		});
 		builder.Services.AddSingleton<TeamApiService>();
+		builder.Services.AddSingleton<IPreferences>(Preferences.Default);
+		builder.Services.AddSingleton<RecentTeammatesStore>();
+		builder.Services.AddSingleton<CreateTeamState>();
 
 #if DEBUG
 		builder.Services.AddBlazorWebViewDeveloperTools();
