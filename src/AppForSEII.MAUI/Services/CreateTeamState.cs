@@ -12,6 +12,11 @@ public class CreateTeamState
 
     // Key = UserId. Kept here so messages survive going back with Edit.
     public Dictionary<string, string> InvitationMessages { get; } = new();
+    
+    // Filled from GET api/Teams/GetTeamsForGame so a taken name is shown while typing.
+    public HashSet<string> ExistingTeamNames { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    public bool IsNameTaken => ExistingTeamNames.Contains(Team.Name.Trim());
 
     public event Action? OnChange;
 
@@ -59,6 +64,8 @@ public class CreateTeamState
 
         if (name.Length < 4 || name.Length > 9)
             errors.Add("Team name must be between 4 and 9 characters long.");
+        else if (IsNameTaken)
+            errors.Add($"A team named '{name}' already exists. Choose another name.");
         if (string.IsNullOrWhiteSpace(Team.SportName))
             errors.Add("Select a sport.");
         if (Team.MinAge < 3)

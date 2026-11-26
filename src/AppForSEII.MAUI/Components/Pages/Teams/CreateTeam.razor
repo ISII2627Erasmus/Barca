@@ -39,9 +39,17 @@
             <h2>Team details</h2>
 
             <label class="ct-label" for="teamName">Team name</label>
-            <input class="ct-input" id="teamName" maxlength="9" placeholder="e.g. Hoops"
+            <input class="ct-input @(State.IsNameTaken ? "is-invalid" : "")" id="teamName" maxlength="9" placeholder="e.g. Hoops"
+                   aria-invalid="@State.IsNameTaken" aria-describedby="teamNameHint"
                    @bind="State.Team.Name" @bind:event="oninput" />
-            <p class="ct-hint">4–9 characters (@State.Team.Name.Length/9)</p>
+            @if (State.IsNameTaken)
+            {
+                <p class="ct-error" id="teamNameHint" role="alert">A team named '@State.Team.Name.Trim()' already exists. Choose another name.</p>
+            }
+            else
+            {
+                <p class="ct-hint" id="teamNameHint">4–9 characters (@State.Team.Name.Length/9)</p>
+            }
 
             <label class="ct-label" for="sportName">Sport</label>
             <select class="ct-input" id="sportName" @bind="State.Team.SportName">
@@ -268,12 +276,19 @@
     private List<ApplicationUserForTeamDTO> RecentSuggestions =>
         RecentStore.GetSuggestions(State.Team.MinAge, State.Team.MaxAge, State.SelectedPlayers.Select(p => p.Id));
 
-    protected override async Task OnInitializedAsync()
+        protected override async Task OnInitializedAsync()
     {
         State.OnChange += OnStateChanged;
-        await LoadSportsAsync();
+        await Task.WhenAll(LoadSportsAsync(), LoadTeamNamesAsync());
         if (State.CurrentStep == 2)
             await LoadPlayersAsync();
+    }
+
+    private async Task LoadTeamNamesAsync()
+    {
+        var result = await TeamApi.GetTeamsAsync();
+        State.ExistingTeamNames.Clear();
+        State.ExistingTeamNames.UnionWith(result.Teams.Select(t => t.Name));
     }
 
     private async Task LoadSportsAsync()
@@ -332,6 +347,7 @@
         }
 
         RecentStore.SaveTeammates(teammates);
+        State.ExistingTeamNames.Add(result.Team!.Name);
         createdTeam = result.Team;
         removedPlayers.Clear();
         State.Reset();

@@ -13,5 +13,6 @@ public static class ApiConfig
     // The MAUI app has no login yet, so the captain is a fixed seed user (SeedData.cs)
     public const string CaptainUserId = "1";
     public const string CaptainUserName = "petra@alu.uclm.es";
+    public const string CaptainFirstName = "Petra";
     public const string CaptainDisplayName = "Petra Peric";
 }

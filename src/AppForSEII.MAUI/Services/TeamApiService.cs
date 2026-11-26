@@ -5,7 +5,7 @@ using AppForSEII.MAUI.Models;
 namespace AppForSEII.MAUI.Services;
 
 public record PlayersResult(List<ApplicationUserForTeamDTO> Players, string? Error);
-
+public record TeamsResult(List<TeamForGameDTO> Teams, string? Error);
 public record CreateTeamResult(TeamDetailDTO? Team, List<string> Errors)
 {
     public bool Success => Team != null;
@@ -41,6 +41,27 @@ public class TeamApiService
         {
             System.Diagnostics.Debug.WriteLine($"[TeamApiService] {ex.Message}");
             return new PlayersResult(new(), "Could not load players. Is AppForSEII.API running?");
+        }
+    }
+
+    public async Task<TeamsResult> GetTeamsAsync(string? captainName = null, string? sportName = null)
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrWhiteSpace(captainName)) query.Add($"captainName={Uri.EscapeDataString(captainName)}");
+        if (!string.IsNullOrWhiteSpace(sportName)) query.Add($"sportName={Uri.EscapeDataString(sportName)}");
+
+        var url = "api/Teams/GetTeamsForGame";
+        if (query.Count > 0) url += "?" + string.Join("&", query);
+
+        try
+        {
+            var teams = await _http.GetFromJsonAsync<List<TeamForGameDTO>>(url) ?? new();
+            return new TeamsResult(teams, null);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException)
+        {
+            System.Diagnostics.Debug.WriteLine($"[TeamApiService] {ex.Message}");
+            return new TeamsResult(new(), "Could not load teams. Is AppForSEII.API running?");
         }
     }
 
@@ -90,6 +111,10 @@ public class TeamApiService
             // Body is not JSON: fall back to the raw text below
         }
 
-        return new() { $"Error {statusCode}: {body}" };
+        // Conflict("...") is sent as plain text, so show the text itself.
+        if (!string.IsNullOrWhiteSpace(body))
+            return new() { body.Trim().Trim('"') };
+
+        return new() { $"Error {statusCode}" };
     }
 }
