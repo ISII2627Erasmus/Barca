@@ -1,0 +1,360 @@
+
+@page "/games/creategame"
+@rendermode InteractiveServer
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@inject GameStateContainer GameState
+@inject AppForSEIIAPIClient apiservice
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<h3>Create Game</h3>
+
+@if (createdGame != null)
+{
+    <div class="alert alert-success mt-3">
+        <strong>Game created successfully!</strong>
+    </div>
+
+    <h4>Game Details</h4>
+
+    <dl class="row">
+        <dt class="col-sm-3">Game ID</dt>
+        <dd class="col-sm-9">@createdGame.Id</dd>
+
+        <dt class="col-sm-3">Game Name</dt>
+        <dd class="col-sm-9">@createdGame.Name</dd>
+
+        <dt class="col-sm-3">Sport</dt>
+        <dd class="col-sm-9">@createdGame.SportName</dd>
+
+        <dt class="col-sm-3">Date and Time</dt>
+        <dd class="col-sm-9">@createdGame.Date.ToString("dd/MM/yyyy HH:mm")</dd>
+
+        <dt class="col-sm-3">Place</dt>
+        <dd class="col-sm-9">@createdGame.Place</dd>
+
+        <dt class="col-sm-3">Description</dt>
+        <dd class="col-sm-9">
+            @(string.IsNullOrWhiteSpace(createdGame.Description)
+                ? "No description"
+                : createdGame.Description)
+        </dd>
+    </dl>
+
+    <h4>Invited Teams</h4>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Team Name</th>
+                    <th>Captain</th>
+                    <th>Members</th>
+                    <th>Min Age</th>
+                    <th>Max Age</th>
+                    <th>Sport</th>
+                    <th>Invitation Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in createdGame.InvitedTeams)
+                {
+                    <tr>
+                        <td>@team.TeamName</td>
+                        <td>@team.CaptainName @team.CaptainSurname</td>
+                        <td>@team.NumberOfMembers</td>
+                        <td>@team.MinAge</td>
+                        <td>@team.MaxAge</td>
+                        <td>@team.SportName</td>
+                        <td>@team.Message</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <button class="btn btn-primary"
+            @onclick="CreateAnotherGame">
+        Create Another Game
+    </button>
+}
+else if (!GameState.SelectedTeams.Any())
+{
+    <div class="alert alert-warning">
+        No teams selected.
+    </div>
+
+    <button class="btn btn-primary"
+            @onclick="BackToTeams">
+        Select Teams
+    </button>
+}
+else
+{
+    <h4>Selected Teams (@GameState.SelectedTeams.Count)</h4>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Team Name</th>
+                    <th>Captain</th>
+                    <th>Members</th>
+                    <th>Min Age</th>
+                    <th>Max Age</th>
+                    <th>Sport</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in GameState.SelectedTeams)
+                {
+                    <tr>
+                        <td>@team.Name</td>
+                        <td>@team.CaptainName @team.CaptainSurname</td>
+                        <td>@team.NumberOfMembers</td>
+                        <td>@team.MinAge</td>
+                        <td>@team.MaxAge</td>
+                        <td>@team.SportName</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <h4 class="mt-4">Game Information</h4>
+
+    <div class="mb-3">
+        <label for="GameName" class="form-label">
+            Game Name *
+        </label>
+        <input id="GameName"
+               class="form-control"
+               @bind="GameState.Game.Name" />
+    </div>
+
+    <div class="mb-3">
+        <label for="GameDate" class="form-label">
+            Date and Time *
+        </label>
+        <input id="GameDate"
+               type="datetime-local"
+               class="form-control"
+               @bind="GameState.Game.Date" />
+    </div>
+
+    <div class="mb-3">
+        <label for="GamePlace" class="form-label">
+            Place *
+        </label>
+        <input id="GamePlace"
+               class="form-control"
+               @bind="GameState.Game.Place" />
+        <small class="text-muted">
+            At least 6 characters.
+        </small>
+    </div>
+
+    <div class="mb-3">
+        <label for="GameDescription" class="form-label">
+            Description (optional)
+        </label>
+        <textarea id="GameDescription"
+                  class="form-control"
+                  @bind="GameState.Game.Description">
+        </textarea>
+    </div>
+
+    <h4 class="mt-4">Invitation Messages</h4>
+
+    @foreach (var invitation in GameState.Game.GameInvitations!)
+    {
+        var team = GameState.SelectedTeams
+            .FirstOrDefault(t => t.Id == invitation.TeamId);
+
+        <div class="mb-3" @key="invitation.TeamId">
+            <label class="form-label">
+                Invitation message for @team?.Name *
+            </label>
+
+            <textarea class="form-control"
+                      id="@($"InvitationMessage-{invitation.TeamId}")"
+                      @bind="invitation.Message">
+            </textarea>
+
+            <small class="text-muted">
+                At least 11 characters.
+            </small>
+        </div>
+    }
+
+    @if (errors.Any())
+    {
+        <div class="alert alert-danger mt-3">
+            <ul class="mb-0">
+                @foreach (var error in errors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+
+    <button id="ModifyTeams"
+            class="btn btn-secondary"
+            disabled="@isSubmitting"
+            @onclick="BackToTeams">
+        Modify Teams
+    </button>
+
+    <button id="ConfirmGame"
+            class="btn btn-success"
+            disabled="@isSubmitting"
+            @onclick="SubmitGame">
+        @(isSubmitting ? "Creating..." : "Confirm")
+    </button>
+}
+
+@code {
+    private GetGameDTO? createdGame;
+    private bool isSubmitting;
+    private List<string> errors = new();
+
+    protected override void OnInitialized()
+    {
+        if (GameState.Game.Date == default)
+        {
+            GameState.Game.Date = DateTime.Now.AddDays(1);
+        }
+    }
+
+    private void BackToTeams()
+    {
+        Navigation.NavigateTo("/games/listteamsforgame");
+    }
+
+    private void CreateAnotherGame()
+    {
+        GameState.ClearGame();
+        createdGame = null;
+        errors.Clear();
+
+        BackToTeams();
+    }
+
+    private bool ValidateGame()
+    {
+        errors.Clear();
+
+        var game = GameState.Game;
+
+        if (string.IsNullOrWhiteSpace(game.Name))
+        {
+            errors.Add("Game name is required.");
+        }
+
+        if (game.Date <= DateTime.Now)
+        {
+            errors.Add("Game date must be in the future.");
+        }
+
+        if (string.IsNullOrWhiteSpace(game.Place) ||
+            game.Place.Trim().Length < 6)
+        {
+            errors.Add("Game place must contain at least 6 characters.");
+        }
+
+        if (game.GameInvitations == null ||
+            !game.GameInvitations.Any())
+        {
+            errors.Add("Please select at least one team.");
+        }
+        else
+        {
+            foreach (var invitation in game.GameInvitations)
+            {
+                if (string.IsNullOrWhiteSpace(invitation.Message) ||
+                    invitation.Message.Trim().Length < 11)
+                {
+                    var team = GameState.SelectedTeams
+                        .FirstOrDefault(t => t.Id == invitation.TeamId);
+
+                    errors.Add(
+                        $"Invitation message for {team?.Name} must contain at least 11 characters.");
+                }
+            }
+        }
+
+        if (GameState.SelectedTeams
+            .Select(t => t.SportName)
+            .Distinct()
+            .Count() > 1)
+        {
+            errors.Add(
+                "All selected teams must belong to the same sport. Please modify the selected teams.");
+        }
+
+        return !errors.Any();
+    }
+
+    private async Task SubmitGame()
+    {
+        if (isSubmitting || !ValidateGame())
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            createdGame = await apiservice.CreateGameAsync(
+                GameState.Game);
+
+            GameState.ClearGame();
+        }
+        catch (ApiException ex)
+        {
+            switch (ex.StatusCode)
+            {
+                case 400:
+                    errors.Add(
+                        string.IsNullOrWhiteSpace(ex.Response)
+                            ? "Invalid game information or insufficient teams."
+                            : ex.Response);
+
+                    errors.Add(
+                        "Please check the game information or select additional teams using Modify Teams.");
+                    break;
+
+                case 401:
+                    errors.Add("You must be logged in to create a game.");
+                    break;
+
+                case 403:
+                    errors.Add(
+                        "You do not have permission to create this game. You must be the captain of at least one selected team.");
+                    break;
+
+                case 409:
+                    errors.Add(
+                        "A game with this name already exists. Please choose another name.");
+                    break;
+
+                default:
+                    errors.Add(
+                        $"Unable to create the game. Error {ex.StatusCode}.");
+                    break;
+            }
+        }
+        catch (Exception)
+        {
+            errors.Add(
+                "An unexpected error occurred. Please try again.");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

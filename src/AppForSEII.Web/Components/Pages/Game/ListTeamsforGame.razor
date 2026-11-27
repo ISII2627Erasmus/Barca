@@ -1,0 +1,195 @@
+
+@page "/games/listteamsforgame"
+@rendermode InteractiveServer
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@inject AppForSEIIAPIClient apiservice
+@inject GameStateContainer GameState
+@inject NavigationManager Navigation
+@attribute [Authorize]
+
+<h3>Select Teams for Game</h3>
+
+<div class="mb-3">
+    <label for="CaptainName">Captain name</label>
+    <input id="CaptainName"
+           class="form-control mb-2"
+           placeholder="Captain name"
+           @bind="captainName" />
+
+    <label for="SportName">Sport name</label>
+    <select id="SportName"
+            class="form-select mb-2"
+            @bind="sportName">
+
+        <option value="">All sports</option>
+
+        @foreach (var sport in sports)
+        {
+            <option value="@sport">@sport</option>
+        }
+    </select>
+
+    <button id="SearchTeams"
+            class="btn btn-primary"
+            @onclick="SearchTeams">
+        Search
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+else if (Teams == null)
+{
+    <p>Loading teams...</p>
+}
+else if (!Teams.Any())
+{
+    <div class="alert alert-warning">
+        No available teams found.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Team Name</th>
+                    <th>Captain</th>
+                    <th>Members</th>
+                    <th>Min Age</th>
+                    <th>Max Age</th>
+                    <th>Sport</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in Teams)
+                {
+                    <tr>
+                        <td>@team.Name</td>
+                        <td>@team.CaptainName @team.CaptainSurname</td>
+                        <td>@team.NumberOfMembers</td>
+                        <td>@team.MinAge</td>
+                        <td>@team.MaxAge</td>
+                        <td>@team.SportName</td>
+                        <td>
+                            @if (GameState.SelectedTeams.Any(t => t.Id == team.Id))
+                            {
+                                <button class="btn btn-outline-danger btn-sm"
+                                        @onclick="() => SelectTeam(team)">
+                                    Remove
+                                </button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-outline-primary btn-sm"
+                                        @onclick="() => SelectTeam(team)">
+                                    Select
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (GameState.SelectedTeams.Any())
+{
+    <h5>Selected Teams (@GameState.SelectedTeams.Count)</h5>
+
+    <ul class="list-group mb-3">
+        @foreach (var team in GameState.SelectedTeams)
+        {
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                @team.Name (@team.SportName)
+
+                <button class="btn btn-outline-danger btn-sm"
+                        @onclick="() => SelectTeam(team)">
+                    Remove
+                </button>
+            </li>
+        }
+    </ul>
+
+    <button id="ConfirmTeams"
+            class="btn btn-success"
+            @onclick="GoToCreateGame">
+        Confirm
+    </button>
+}
+
+@code {
+    private string? captainName;
+    private string? sportName;
+    private string? errorMessage;
+
+    private ICollection<TeamForGameDTO>? Teams;
+    private List<string> sports = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var allTeams = await apiservice.GetTeamsForGameAsync(
+                null, null);
+
+            sports = allTeams
+                .Select(t => t.SportName)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToList();
+
+            sportName = GameState.SelectedTeams
+                .FirstOrDefault()?.SportName
+                ?? sports.FirstOrDefault();
+
+            await SearchTeams();
+        }
+        catch (ApiException)
+        {
+            Teams = new List<TeamForGameDTO>();
+            errorMessage = "Unable to load teams. Please try again.";
+        }
+    }
+
+    protected async Task SearchTeams()
+    {
+        errorMessage = null;
+
+        try
+        {
+            Teams = await apiservice.GetTeamsForGameAsync(
+                captainName, sportName);
+        }
+        catch (ApiException)
+        {
+            Teams = new List<TeamForGameDTO>();
+            errorMessage = "Unable to load teams. Please try again.";
+        }
+    }
+
+    private void SelectTeam(TeamForGameDTO team)
+    {
+        if (GameState.SelectedTeams.Any(t => t.Id == team.Id))
+        {
+            GameState.RemoveTeam(team.Id);
+        }
+        else
+        {
+            GameState.AddTeam(team, string.Empty);
+        }
+    }
+
+    private void GoToCreateGame()
+    {
+        Navigation.NavigateTo("/games/creategame");
+    }
+}
