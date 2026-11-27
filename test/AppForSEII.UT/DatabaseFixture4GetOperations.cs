@@ -18,67 +18,32 @@ public sealed class DatabaseFixture4GetOperations : IDisposable
         _connection = new SqliteConnection("Filename=:memory:");
         _connection.Open();
 
-        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseSqlite(_connection)
-            .Options;
+        _contextOptions = new DbContextOptionsBuilder<ApplicationDbContext>().UseSqlite(_connection).Options;
 
         using var context = CreateContext();
         context.Database.EnsureCreated();
 
-        var football = new Sport
-        {
-            Name = "Football",
-            MinimumNumberOfPlayers = 11,
-            NumberOfReferees = 1,
-            Description = "Football",
-            BasicRules = "Score goals"
-        };
-        var basketball = new Sport
-        {
-            Name = "Basketball",
-            MinimumNumberOfPlayers = 5,
-            NumberOfReferees = 2,
-            Description = "Basketball",
-            BasicRules = "Score points"
-        };
+        var football = new Sport{Name = "Football", MinimumNumberOfPlayers = 11, NumberOfReferees = 1, Description = "Football", BasicRules = "Score goals"};
+        var basketball = new Sport{Name = "Basketball", MinimumNumberOfPlayers = 5, NumberOfReferees = 2, Description = "Basketball", BasicRules = "Score points"};
 
         context.Sports.AddRange(football, basketball);
         context.SaveChanges();
 
-        FootballBoots = new Item(
-            "Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", 5, football);
-        FootballShirt = new Item(
-            "Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M", 8, football);
-        BasketballShoes = new Item(
-            "Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", 4, basketball);
-        var outOfStockItem = new Item(
-            "Out of stock", "Nike", 29.90m, 21, Gender.Male, "42", 0, football);
+        FootballBoots = new Item("Football Boots", "Nike", 59.90m, 21, Gender.Male, "42", 5, football);
+        FootballShirt = new Item("Football Shirt", "Adidas", 39.90m, 18, Gender.Female, "M", 8, football);
+        BasketballShoes = new Item("Basketball Shoes", "Puma", 79.90m, 21, Gender.Male, "42", 4, basketball);
+        var outOfStockItem = new Item("Out of stock", "Nike", 29.90m, 21, Gender.Male, "42", 0, football);
 
         context.Items.AddRange(FootballBoots, FootballShirt, BasketballShoes, outOfStockItem);
 
         Customer = new ApplicationUser("purchase-user", "Taylor", "Smith", "taylor@example.com")
-        {
-            BirthDate = new DateOnly(2000, 1, 1),
-            Age = 26,
-            Gender = Gender.Male
-        };
+        {BirthDate = new DateOnly(2000, 1, 1), Age = 26, Gender = Gender.Male};
         context.ApplicationUsers.Add(Customer);
         context.SaveChanges();
 
-        ExistingPurchase = new Purchase(
-            Customer,
-            "Main Street 1",
-            "Barcelona",
-            "Barcelona",
-            "4111111111111111",
-            "123",
-            "12/30",
-            "Fixture purchase")
-        {
-            PurchaseDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)
-        };
-        ExistingPurchase.PurchaseItems.Add(
-            new PurchaseItem(ExistingPurchase, FootballBoots, quantity: 2));
+        ExistingPurchase = new Purchase(Customer, "Main Street 1", "Barcelona", "Barcelona", "4111111111111111", "123", "12/30", "Fixture purchase")
+        {PurchaseDate = new DateTime(2025, 1, 15, 12, 0, 0, DateTimeKind.Utc)}; // Add PurchaseDate property to ExistingPurchase using Object initializer
+        ExistingPurchase.PurchaseItems.Add(new PurchaseItem(ExistingPurchase, FootballBoots, quantity: 2));
         ExistingPurchase.TotalPrice = FootballBoots.Price * 2;
         FootballBoots.QuantityAvailableForPurchase -= 2;
 

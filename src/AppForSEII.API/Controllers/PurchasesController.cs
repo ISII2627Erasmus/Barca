@@ -1,40 +1,44 @@
-using System.Data;
-using System.Security.Claims;
 using AppForSEII.API.Data;
 using AppForSEII.API.DTOs.PurchaseDTOs;
 using AppForSEII.API.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AppForSEII.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
-public class PurchasesController(ApplicationDbContext context) : ControllerBase
+public class PurchasesController : ControllerBase
 {
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<PurchasesController> _logger;
+
+    public PurchasesController(
+        ApplicationDbContext context,
+        ILogger<PurchasesController> logger)
+    {
+        _context = context;
+        _logger = logger;
+    }
+
     [HttpGet]
     [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PurchaseDetailDTO>> GetPurchase([FromQuery] int id)
     {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
-
-        var purchase = await context.Purchases
+        var purchase = await _context.Purchases
             .AsNoTracking()
-            .Where(purchase => purchase.Id == id && purchase.UserId == userId)
+            .Where(purchase => purchase.Id == id)
             .Select(purchase => new PurchaseDetailDTO(
                 purchase.Id,
                 purchase.PurchaseDate,
                 purchase.PurchaseDescription,
                 purchase.TotalPrice,
                 purchase.IsWrapped,
-                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.User.Name,
+                purchase.User.Surname,
                 purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
                     purchaseItem.Item.Id,
                     purchaseItem.Item.Name,
@@ -44,17 +48,23 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                     purchaseItem.Item.Gender,
                     purchaseItem.Item.Size,
                     purchaseItem.Item.Sport.Name,
-                    purchaseItem.Quantity)).ToList()))
+                    purchaseItem.Quantity)).ToList(),
+                purchase.User.UserName!))
             .FirstOrDefaultAsync();
 
-        return purchase is null ? NotFound() : Ok(purchase);
+        if (purchase is null)
+        {
+            _logger.LogWarning("Purchase with ID {PurchaseId} was not found.", id);
+            return NotFound();
+        }
+
+        return Ok(purchase);
     }
 
     [HttpPost]
     [Route("[action]")]
     [ProducesResponseType(typeof(PurchaseDetailDTO), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(string), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<PurchaseDetailDTO>> CreatePurchase([FromBody] PurchaseForCreateDTO dto)
     {
@@ -74,21 +84,21 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
             return BadRequest(new ValidationProblemDetails(ModelState));
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
-            return Unauthorized();
+        if (string.IsNullOrWhiteSpace(dto.CustomerUserName))
+        {
+            ModelState.AddModelError(nameof(dto.CustomerUserName), "Customer username is required.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
-        var user = await context.ApplicationUsers
-            .FirstOrDefaultAsync(user => user.Id == userId);
+        var user = await _context.ApplicationUsers
+            .FirstOrDefaultAsync(user => user.UserName == dto.CustomerUserName);
         if (user is null)
-            return Unauthorized();
+        {
+            ModelState.AddModelError(nameof(dto.CustomerUserName), "The customer username was not found.");
+            return BadRequest(new ValidationProblemDetails(ModelState));
+        }
 
-        // SaveChanges makes the writes atomic, but this transaction also covers the
-        // stock read/check so concurrent purchases cannot both spend the same stock.
-        await using var transaction = await context.Database
-            .BeginTransactionAsync(IsolationLevel.Serializable);
-
-        var items = await context.Items
+        var items = await _context.Items
             .Include(item => item.Sport)
             .Where(item => itemIds.Contains(item.Id))
             .ToListAsync();
@@ -124,16 +134,15 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
         }
 
         purchase.TotalPrice = purchase.PurchaseItems.Sum(item => item.Price * item.Quantity);
-        context.Purchases.Add(purchase);
+        _context.Purchases.Add(purchase);
 
         try
         {
-            await context.SaveChangesAsync();
-            await transaction.CommitAsync();
+            await _context.SaveChangesAsync();
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception)
         {
-            await transaction.RollbackAsync();
+            _logger.LogError(exception, "Failed to save purchase for customer {CustomerUserName}.", user.UserName);
             return Conflict("The purchase could not be saved.");
         }
 
@@ -146,7 +155,8 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                 purchase.PurchaseDescription,
                 purchase.TotalPrice,
                 purchase.IsWrapped,
-                new PurchaseUserDTO(purchase.User.Name, purchase.User.Surname),
+                purchase.User.Name,
+                purchase.User.Surname,
                 purchase.PurchaseItems.Select(purchaseItem => new PurchaseItemDTO(
                     purchaseItem.Item.Id,
                     purchaseItem.Item.Name,
@@ -156,6 +166,7 @@ public class PurchasesController(ApplicationDbContext context) : ControllerBase
                     purchaseItem.Item.Gender,
                     purchaseItem.Item.Size,
                     purchaseItem.Item.Sport.Name,
-                    purchaseItem.Quantity)).ToList()));
+                    purchaseItem.Quantity)).ToList(),
+                purchase.User.UserName!));
     }
 }
