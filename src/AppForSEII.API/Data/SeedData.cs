@@ -74,7 +74,7 @@ public class SeedData
             (
                 Id: "1",
                 Name: "Petra",
-                Surname: "Petra Peric",
+                Surname: "Peric",
                 Email: "petra@alu.uclm.es",
                 BirthDate: new DateOnly(1990, 5, 15),
                 Age: 36,
@@ -434,6 +434,20 @@ public static void SeedSports(ApplicationDbContext dbContext)
                 {
                     (Email: "mia@alu.uclm.es", Message: "Want to play basketball with us?", Accepted: true),
                     (Email: "luka@alu.uclm.es", Message: "Join the Eagles!", Accepted: false)
+                }),
+            (Name: "Sharks", CaptainEmail: "luka@alu.uclm.es", SportName: "Futsal",
+                MaxMembers: 5, MinAge: 18, MaxAge: 40, Description: "Futsal team that trains on Tuesdays",
+                Invited: new[]
+                {
+                    (Email: "mia@alu.uclm.es", Message: "Join the Sharks for futsal!", Accepted: true),
+                    (Email: "ana@alu.uclm.es", Message: "We would love you in our team", Accepted: false)
+                }),
+            (Name: "Bulls", CaptainEmail: "peter@alu.uclm.es", SportName: "Basketball",
+                MaxMembers: 6, MinAge: 20, MaxAge: 35, Description: "Basketball team for evening games",
+                Invited: new[]
+                {
+                    (Email: "petra@alu.uclm.es", Message: "Play basketball with the Bulls!", Accepted: true),
+                    (Email: "ivan@alu.uclm.es", Message: "Join the Bulls!", Accepted: false)
                 })
         };
 

@@ -1,0 +1,82 @@
+@page "/teams/detailteam"
+@using AppForSEII.Web.API
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AppForSEIIAPIClient apiservice
+@attribute [Authorize]
+
+<h3>Team details</h3>
+
+@if (team == null)
+{
+    <div class="alert alert-warning" id="errorTeam">@error</div>
+}
+else
+{
+    <div class="row">
+        <div class="col-md-6">
+            <table class="table table-borderless table-sm">
+                <tr>
+                    <th>Team Name</th>
+                    <td id="TeamName">@team.Name</td>
+                </tr>
+                <tr>
+                    <th>Sport</th>
+                    <td id="SportName">@team.SportName</td>
+                </tr>
+                <tr>
+                    <th>Age range</th>
+                    <td id="AgeRange">@team.MinAge - @team.MaxAge</td>
+                </tr>
+                <tr>
+                    <th>Captain</th>
+                    <td id="Captain">@team.CaptainName @team.CaptainSurname (@team.CaptainAge)</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <h4>Invited players</h4>
+    <table class="table" id="InvitationsTable">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Surname</th>
+                <th scope="col">Age</th>
+                <th scope="col">Invitation message</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (TeamInvitationDTO invitation in team.Invitations)
+            {
+                <tr id="Invitation_@invitation.UserId">
+                    <td>@invitation.Name</td>
+                    <td>@invitation.Surname</td>
+                    <td>@invitation.Age</td>
+                    <td>@invitation.InvitationMessage</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int TeamId { get; set; }
+
+    private TeamDetailDTO? team;
+    private string error = "Loading...";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            team = await apiservice.GetTeamAsync(TeamId);
+        }
+        catch (ApiException)
+        {
+            team = null;
+            error = $"Error! There is no team with id={TeamId}";
+        }
+    }
+}
