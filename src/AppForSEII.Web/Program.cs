@@ -19,6 +19,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
+builder.Services.AddScoped<GameStateContainer>();
 builder.Services.AddScoped<PurchaseStateContainer>();
 
 builder.Services.AddAuthentication(options =>
